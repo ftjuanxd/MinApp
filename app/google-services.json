@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1021318098283",
+    "project_id": "minapp-c89d7",
+    "storage_bucket": "minapp-c89d7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1021318098283:android:d1d3c6253437e975a2b02e",
+        "android_client_info": {
+          "package_name": "com.zonedev.minapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAS_-5HbDG-STSrv6uuhucVX9dIDPkepTE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
