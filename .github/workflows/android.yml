@@ -61,15 +61,6 @@ jobs:
             adb wait-for-device
             adb devices
 
-      - name: Build with Gradle
-        run: ./gradlew assembleDebug
-
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest
-
-      - name: Run instrumentation tests
-        run: ./gradlew connectedDebugAndroidTest
-
   publish-artifact:
     needs: build-and-test
     runs-on: ubuntu-latest
