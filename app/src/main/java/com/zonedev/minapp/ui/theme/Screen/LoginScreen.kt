@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -33,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
 
@@ -46,7 +48,7 @@ fun LoginApp(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         BlobUi()
-        Spacer(modifier = Modifier.height((-20).dp)) // Reduce la altura entre componentes
+        Spacer(modifier = Modifier.height((-10).dp)) // Reduce la altura entre componentes
         CustomLoginScreen(navController, auth, onLoginSuccess)
     }
 }
@@ -142,6 +144,31 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
                     onClick = onDismiss,
                 )
             }
+        )
+    }
+}
+
+// Función Composable para el preview de Modal
+@Composable
+fun PreviewModalDialog() {
+    MinappTheme { // Envuelve tu componente con tu tema para que los colores y la tipografía se apliquen
+        Modal(
+            showDialog = true, // Establece showDialog a true para que el diálogo sea visible en el preview
+            onDismiss = { false },
+            errorMessage = "¡Ha ocurrido un error inesperado! Por favor, inténtalo de nuevo."
+        )
+    }
+}
+
+
+@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun PreviewModalDialogDark() {
+    MinappTheme(darkTheme = true) { // Fuerza el tema oscuro para este preview
+        Modal(
+            showDialog = true,
+            onDismiss = { /* No se necesita una implementación real para el preview */ },
+            errorMessage = "¡Ha ocurrido un error inesperado! Por favor, inténtalo de nuevo."
         )
     }
 }

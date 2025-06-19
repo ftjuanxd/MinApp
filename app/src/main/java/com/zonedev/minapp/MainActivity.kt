@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController, startDestination = "main") {
                     composable("main") {
-                        MainScreen(navController)
+                        MainScreen(navController) // Splash Screen
                     }
                     composable("login") {
                         LoginApp(navController, auth) { userId ->
