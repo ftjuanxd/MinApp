@@ -52,6 +52,9 @@ jobs:
           target: default
           arch: x86_64
           emulator-options: "-no-window"
+          script: |
+            adb wait-for-device
+            adb devices
 
       - name: Build with Gradle
         run: ./gradlew assembleDebug
