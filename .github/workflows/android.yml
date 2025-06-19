@@ -45,6 +45,11 @@ jobs:
           build-tools: "31.0.0"
           ndk: "21.4.7075529"
 
+      - name: Build and unit test
+        run: |
+          ./gradlew assembleDebug
+          ./gradlew testDebugUnitTest
+
       - name: Start Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
