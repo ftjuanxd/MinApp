@@ -41,12 +41,14 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -690,13 +692,13 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
         PaginationScreen(reportes)
     }
 }
+
 // Función para convertir milisegundos a una fecha legible
 fun formatDate(timestamp: com.google.firebase.Timestamp): String {
     val date = timestamp.toDate()
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return dateFormat.format(date)
 }
-
 
 @Composable
 fun Pagination(
@@ -712,47 +714,50 @@ fun Pagination(
             .border(2.dp, primary, shape = RoundedCornerShape(8.dp))
             .background(primary)
     ) {
-        // Botón de "Previous"
-        TextButton(
-            onClick = {
-                if (currentPage > 1) {
-                    onPageChanged(currentPage - 1)
-                }
-            },
-            enabled = currentPage > 1
-        ) {
-            Text("Previous", color = if (currentPage > 1)  background else color_component)
-        }
-
-        //Spacer(modifier = Modifier.width(8.dp))
-
-        // Números de páginas
-        for (page in 1..totalPages) {
+        CompositionLocalProvider(LocalContentColor provides background){
+            // Botón de "Previous"
             TextButton(
                 onClick = {
-                    onPageChanged(page)
-                }
+                    if (currentPage > 1) {
+                        onPageChanged(currentPage - 1)
+                    }
+                },
+                enabled = currentPage > 1
             ) {
-                Text(
-                    text = page.toString(),
-                    color = if (page == currentPage) color_component else background
-                )
+                Text("Previous", color = if (currentPage > 1)  color_component else background)
+            }
+
+            //Spacer(modifier = Modifier.width(8.dp))
+
+            // Números de páginas
+            for (page in 1..totalPages) {
+                TextButton(
+                    onClick = {
+                        onPageChanged(page)
+                    }
+                ) {
+                    Text(
+                        text = page.toString(),
+                        color = if (page == currentPage) background else color_component
+                    )
+                }
+            }
+
+            //Spacer(modifier = Modifier.width(8.dp))
+
+            // Botón de "Next"
+            TextButton(
+                onClick = {
+                    if (currentPage < totalPages) {
+                        onPageChanged(currentPage + 1)
+                    }
+                },
+                enabled = currentPage < totalPages
+            ) {
+                Text("Next", color = if (currentPage < totalPages) color_component else background)
             }
         }
 
-        //Spacer(modifier = Modifier.width(8.dp))
-
-        // Botón de "Next"
-        TextButton(
-            onClick = {
-                if (currentPage < totalPages) {
-                    onPageChanged(currentPage + 1)
-                }
-            },
-            enabled = currentPage < totalPages
-        ) {
-            Text("Next", color = if (currentPage < totalPages) background else color_component)
-        }
     }
 }
 

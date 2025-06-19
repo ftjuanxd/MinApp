@@ -32,7 +32,6 @@ import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
 
-@Preview
 @Composable
 fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
     Components_Profile_Screen(viewModel)

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Minapp</string>
+    <string name="app_name">MinApp</string>
     <string name="blob_ui_text">WELCOME</string>
     <string name="input_login_name_email">Email</string>
     <string name="input_login_placeholder_email">Minapp@gmail.com</string>
