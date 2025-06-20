@@ -52,6 +52,7 @@ android {
 }
 
 dependencies {
+    //Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
@@ -60,6 +61,9 @@ dependencies {
     implementation(libs.coil)
 
     implementation(libs.ml.kit)
+
+    //Icons
+    implementation(libs.compose.icons.extended)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

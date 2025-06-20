@@ -23,7 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.primary
 
 @Preview
 @Composable
@@ -84,7 +83,7 @@ fun ComponentsChat(){
                 imeAction = ImeAction.Done,
             ),
             trailingIcon = R.drawable.logon_send,
-            iconTint = primary,
+            iconTint = R.color.primary,
         )
 
     }

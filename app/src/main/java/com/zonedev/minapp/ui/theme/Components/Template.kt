@@ -81,7 +81,7 @@ fun Template_Text(
 
     CustomTextField(
         value = name,
-        label = "Name",
+        label = "Nombre",
         onValueChange = { name = it },
         isEnabled = true,
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -127,7 +127,7 @@ fun Components_Template(
                 Text(
                     text = stringResource(R.string.Name_Modal_Report),
                     color = primary,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 16.dp)

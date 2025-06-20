@@ -3,6 +3,7 @@ package com.zonedev.minapp.ui.theme.Components
 
 import android.app.DatePickerDialog
 import android.graphics.Bitmap
+import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateDpAsState
@@ -31,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -265,7 +268,7 @@ fun CustomTextField(
     isEnabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
     @DrawableRes trailingIcon: Int? = null,
-    iconTint: Color? = null,
+    @ColorRes iconTint: Int? = null,
     pdHeight: Dp? = null,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -280,6 +283,13 @@ fun CustomTextField(
         true -> Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
         false -> Modifier.fillMaxWidth().wrapContentWidth(Alignment.Start)
         else -> Modifier.fillMaxWidth()
+    }
+
+    // Determina el color final que se usará para el tinte del icono
+    val resolvedIconTint = when {
+        iconTint != null -> colorResource(id = iconTint) // Si se proporciona un ID de recurso, úsalo
+        iconTint != null -> iconTint // Si se proporciona un objeto Color, úsalo
+        else -> Color.Black // Por defecto si no se proporciona ninguno
     }
 
     TextField(
@@ -306,16 +316,28 @@ fun CustomTextField(
                 )
             } else if (isPasswordField) {
                 // Alterna entre "Mostrar" y "Ocultar"
-                Text(
-                    text = if (passwordVisible) "Ocultar" else "Mostrar",
-                    color = iconTint ?: Color.Black,
+                //Text(
+                  //  text = if (passwordVisible) "Ocultar" else "Mostrar",
+                   // color = iconTint ?: Color.Black,
+                   // modifier = Modifier.clickable { passwordVisible = !passwordVisible }
+                //)
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                Icon(
+                    imageVector = image,
+                    contentDescription = description,
+                    tint = resolvedIconTint,
                     modifier = Modifier.clickable { passwordVisible = !passwordVisible }
                 )
             } else if (trailingIcon != null) {
                 Icon(
                     painter = painterResource(id = trailingIcon),
                     contentDescription = null,
-                    tint = iconTint ?: Color.Black
+                    tint = resolvedIconTint
                 )
             }
         },
@@ -568,7 +590,7 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
 
     CustomTextField(
         value = destiny,
-        label = "Destiny",
+        label = "Destino",
         onValueChange = onDestinyChange,
         isEnabled = true,
         KeyboardOptions.Default.copy(
@@ -579,7 +601,7 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
     //TextField Authorization
     CustomTextField(
         value = auto,
-        label = "Authorization",
+        label = "Autorizacion",
         onValueChange = onAutoChange,
         isEnabled = true,
         KeyboardOptions.Default.copy(
@@ -590,7 +612,7 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
     //TextField Description
     CustomTextField(
         value = descrip,
-        label = "Description",
+        label = "Descripcion",
         onValueChange = onDescripChange,
         isEnabled = true,
         KeyboardOptions.Default.copy(
@@ -605,7 +627,7 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
 @Composable
 fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewModel()) {
     var selectedOption by remember { mutableStateOf("Personal") }
-    val options = listOf("Personal", "Vehicular", "Elemento", "Observations")
+    val options = listOf("Personal", "Vehicular", "Elemento", "Observationsn")
     var reportes by remember { mutableStateOf(emptyList<Reporte>()) }
     var idFiltro by remember { mutableStateOf("") }
     var nombreFiltro by remember { mutableStateOf("") }
