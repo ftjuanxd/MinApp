@@ -10,14 +10,12 @@
     <string name="Descripcion_profileScreen_Image">Imagen de perfil</string>
     <string name="Text_profileScreen_Button">Manual</string>
     <string name="Descripcion_Navbar_Icon_Power">Cerrar Sesión</string>
-    <string name="Descripcion_Navbar_Icon_Notificacion">Notification</string>
-    <string name="Descripcion_Navbar_Icon_Profile_Screen">Menu</string>
+    <string name="Descripcion_Navbar_Icon_Profile_Screen">MENU</string>
     <string name="Description_name_Input_user">Usuario</string>
     <string name="Description_name_Input_password">Contraseña</string>
     <string name="Label_name_input_user">Correo</string>
     <string name="Label_name_Input_password">Contraseña</string>
-    <string name="Name_Interfaz_chat">Chat</string>
-    <string name="Name_Interfaz_Observations">Observaciones</string>
+    <string name="Name_Interfaz_Observations">OBSERVACIONES</string>
     <string name="label_subject">Titulo</string>
     <string name="label_observations">Observaciones</string>
     <string name="button_submit">Reportar</string>
@@ -25,14 +23,11 @@
     <string name="Label_Upload_Files">Evidencias</string>
     <string name="Name_CheckHolder">Mantener Valores</string>
     <string name="Name_Interfaz_Pedestrian_Access">PERSONAL</string>
-    <string name="Value_Default_Label_Camera">Scan Id</string>
-    <string name="Value_Segmented_Button">Write</string>
     <string name="Name_Interfaz_Vehicular">VEHICULAR</string>
     <string name="Name_Interfaz_Element">ELEMENTO</string>
-    <string name="Value_Label_Element">Scan Element</string>
+    <string name="Value_Label_Element">Capture Element</string>
     <string name="Value_Default_Label_Id">Id</string>
     <string name="Value_Label_Vehicular">Placa</string>
-    <string name="Value_Label_Vehicular_Scan">Scan Transit License</string>
     <string name="Name_Interfaz_Report">REPORTES</string>
     <string name="Name_Modal_Report">REPORTADO</string>
     <string name="Content_Modal_Report">El Reporte fue realizado</string>
@@ -41,5 +36,4 @@
     <string name="Content_Modal_Download">El Manual fue Descargado</string>
     <string name="Label_Value_Central">Central</string>
     <string name="Label_Value_Employ">Carlos</string>
-    <string name="Name_Interfaz_Chat">Chat</string>
 </resources>

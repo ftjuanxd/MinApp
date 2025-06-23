@@ -80,7 +80,6 @@ import androidx.navigation.NavController
 import com.google.firebase.Timestamp
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Model.Reporte
-import com.zonedev.minapp.ui.theme.Screen.Chat
 import com.zonedev.minapp.ui.theme.Screen.Element
 import com.zonedev.minapp.ui.theme.Screen.Observations
 import com.zonedev.minapp.ui.theme.Screen.Personal
@@ -112,75 +111,42 @@ fun BaseScreen(
 
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
-    var notificationIcon by remember { mutableStateOf(R.drawable.notificacion) }
     var logoIcon by remember { mutableStateOf(R.drawable.power_off) }
-    var fontSizeTitule by remember { mutableStateOf(20.sp) }
+    var homeIcon by remember { mutableStateOf(R.drawable.logo_home) }
+    var fontSizeTitule by remember { mutableStateOf(25.sp) }
     var SizeIcon by remember { mutableStateOf(40.dp) }
-    var endPadding by remember { mutableStateOf(180.dp) }
     var previousPage by remember { mutableStateOf("home") }
 
     // Actualizamos los valores de Navbar según la opción seleccionada
     when (opcClic) {
         "obs" -> {
             title = R.string.Name_Interfaz_Observations
-            notificationIcon = R.drawable.notificacion
-            logoIcon = R.drawable.logo_home
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 100.dp
+            logoIcon = homeIcon
             previousPage = "obs"
         }
         "veh" -> {
             title = R.string.Name_Interfaz_Vehicular
-            notificationIcon = R.drawable.notificacion
-            logoIcon = R.drawable.logo_home
-            fontSizeTitule = 25.sp
-            SizeIcon = 40.dp
-            endPadding = 130.dp
+            logoIcon = homeIcon
             previousPage = "veh"
         }
         // Agregamos las otras opciones de la misma forma
         "home" -> {
             title = R.string.Descripcion_Navbar_Icon_Profile_Screen
-            notificationIcon = R.drawable.notificacion
-            logoIcon = R.drawable.power_off
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 180.dp
-        }
-        "chat" -> {
-            title = R.string.Name_Interfaz_Chat
-            notificationIcon = R.drawable.notificacion_disable
-            logoIcon = R.drawable.logo_home
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 200.dp
+            logoIcon = logoIcon
         }
         "per" -> {
             title = R.string.Name_Interfaz_Pedestrian_Access
-            notificationIcon = R.drawable.notificacion
-            logoIcon =  R.drawable.logo_home
-            fontSizeTitule = 15.sp
-            SizeIcon = 40.dp
-            endPadding = 80.dp
+            logoIcon =  homeIcon
             previousPage = "per"
         }
         "ele" -> {
             title = R.string.Name_Interfaz_Element
-            notificationIcon = R.drawable.notificacion
-            logoIcon =  R.drawable.logo_home
-            fontSizeTitule = 25.sp
-            SizeIcon = 40.dp
-            endPadding = 130.dp
+            logoIcon =  homeIcon
             previousPage = "ele"
         }
         "rep" -> {
             title = R.string.Name_Interfaz_Report
-            notificationIcon = R.drawable.notificacion
-            logoIcon =  R.drawable.logo_home
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 200.dp
+            logoIcon =  homeIcon
             previousPage = "rep"
         }
     }
@@ -198,17 +164,15 @@ fun BaseScreen(
         ) {
             Navbar(
                 Titule = title,
-                Activenotificacion = notificationIcon,
                 home_power = logoIcon,
                 fontSizeTitule = fontSizeTitule,
                 SizeIcon = SizeIcon,
-                endPadding = endPadding,
                 onMenuClick = { isSidebarVisible = !isSidebarVisible },
                 onItemClick = { clickedOption ->
                     opcClic = clickedOption
                 },
                 navController,
-                previousPage =  previousPage
+                previousPage = previousPage
             )
             Spacer(modifier = Modifier.height(50.dp))
             Column(
@@ -220,7 +184,6 @@ fun BaseScreen(
                     "home" -> ProfileScreen(guardiaViewModel)
                     "obs" -> Observations(guardiaId)
                     "veh" -> Vehicular(guardiaId)
-                    "chat" -> Chat()
                     "per" -> Personal(guardiaId)
                     "ele" -> Element(guardiaId)
                     "rep" -> ScreenReport(guardiaId)
@@ -357,8 +320,8 @@ fun CustomTextField(
 @Composable
 fun DatePickerWithCustomTextField(
     label: String,
-    initialDate: com.google.firebase.Timestamp?,
-    onDateSelected: (com.google.firebase.Timestamp) -> Unit,
+    initialDate: Timestamp?,
+    onDateSelected: (Timestamp) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -398,11 +361,9 @@ fun DatePickerWithCustomTextField(
 @Composable
 fun Navbar(
     @StringRes Titule: Int,
-    @DrawableRes Activenotificacion: Int,
     @DrawableRes home_power: Int,
     fontSizeTitule: TextUnit,
     SizeIcon: Dp,
-    endPadding: Dp,
     onMenuClick: () -> Unit, // Para manejar el clic en el menú
     onItemClick: (String) -> Unit, // Manejar los clics de los ítems
     navController: NavController,
@@ -430,24 +391,9 @@ fun Navbar(
             color = background,
             fontSize = fontSizeTitule,
             fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(end = endPadding, top = 5.dp)
+            modifier = Modifier.padding(top = 2.dp)
         )
         Row {
-            Icon(
-                painter = painterResource(id = Activenotificacion),
-                contentDescription = stringResource(R.string.Descripcion_Navbar_Icon_Notificacion),
-                tint = colorResource(R.color.background),
-                modifier = Modifier
-                    .size(SizeIcon)
-                    .clickable {
-                        if (Activenotificacion == R.drawable.notificacion_disable) {
-                            // Vuelve a la pantalla anterior
-                            onItemClick(previousPage)
-                        } else {
-                            onItemClick("chat")
-                        }
-                    }
-            )
             Icon(
                 painter = painterResource(id = home_power),
                 contentDescription = stringResource(R.string.Descripcion_Navbar_Icon_Power),
@@ -489,61 +435,6 @@ fun ButtonApp(
                 tint = Color.White,
             )
         }
-    }
-}
-
-@Composable
-fun SegmentedButton(ScanComponent: @Composable () -> Unit, TextComponent: @Composable () -> Unit) {
-    // Estado que almacena qué botón está seleccionado (0 para Scan Id, 1 para Write)
-    var selectedButton by remember { mutableStateOf(0) }
-
-    Row(
-        modifier = Modifier
-            .border(5.dp, color_component, RoundedCornerShape(16.dp)),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Button(
-            onClick = { selectedButton = 0 }, // Acción de seleccionar Scan Id
-            shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
-            colors = if (selectedButton == 0) {
-                // Si el botón está seleccionado, cambia el color
-                ButtonDefaults.buttonColors(containerColor = color_component, contentColor = background)
-            } else {
-                // Si no está seleccionado, usa estos colores
-                ButtonDefaults.buttonColors(containerColor = background, contentColor = color_component)
-            },
-            modifier = Modifier
-                .weight(2f)//
-        ) {
-            Text(
-                text = stringResource(R.string.Value_Default_Label_Camera),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Button(
-            onClick = { selectedButton = 1 }, // Acción de seleccionar Write
-            shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp),
-            colors = if (selectedButton == 1) {
-                ButtonDefaults.buttonColors(containerColor = color_component, contentColor = background)
-            } else {
-                ButtonDefaults.buttonColors(containerColor = background, contentColor = color_component)
-            },
-            modifier = Modifier
-                .weight(2f)
-        ) {
-            Text(
-                text = stringResource(R.string.Value_Segmented_Button),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold)
-        }
-    }
-    // Aquí se muestra el contenido según el botón seleccionado
-    Spacer(modifier = Modifier.height(16.dp)) // Espacio entre los botones y el contenido
-    when (selectedButton) {
-        0 -> ScanComponent() // Mostrar contenido de Scan Id
-        1 -> TextComponent()   // Mostrar contenido de Write
     }
 }
 
@@ -627,13 +518,13 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
 @Composable
 fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewModel()) {
     var selectedOption by remember { mutableStateOf("Personal") }
-    val options = listOf("Personal", "Vehicular", "Elemento", "Observationsn")
+    val options = listOf("Personal", "Vehicular", "Elemento", "Observations")
     var reportes by remember { mutableStateOf(emptyList<Reporte>()) }
     var idFiltro by remember { mutableStateOf("") }
     var nombreFiltro by remember { mutableStateOf("") }
     var tipoFiltro by remember { mutableStateOf(selectedOption) }
-    var fechaInicio by remember { mutableStateOf<com.google.firebase.Timestamp?>(null) }
-    var fechaFin by remember { mutableStateOf<com.google.firebase.Timestamp?>(null) }
+    var fechaInicio by remember { mutableStateOf<Timestamp?>(null) }
+    var fechaFin by remember { mutableStateOf<Timestamp?>(null) }
 
     // Actualizar los reportes cada vez que cambian los filtros
     LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin) {
@@ -716,7 +607,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
 }
 
 // Función para convertir milisegundos a una fecha legible
-fun formatDate(timestamp: com.google.firebase.Timestamp): String {
+fun formatDate(timestamp: Timestamp): String {
     val date = timestamp.toDate()
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return dateFormat.format(date)
