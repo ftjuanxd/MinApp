@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -36,6 +37,7 @@ import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
+import com.zonedev.minapp.ui.theme.primary
 
 @Composable
 fun LoginApp(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
@@ -139,8 +141,22 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(text = "Error") },
-            text = { Text(text = errorMessage) },
+            title = { Text(
+                text = "Error",
+                color= primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth(),
+                )
+            },
+            text = { Text(
+                text = errorMessage,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 6.dp))
+            },
             confirmButton = {
                 ButtonApp(
                     text = stringResource(R.string.Value_Button_Report),

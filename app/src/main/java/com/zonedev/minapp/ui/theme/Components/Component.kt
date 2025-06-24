@@ -112,7 +112,7 @@ fun BaseScreen(
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
     var logoIcon by remember { mutableStateOf(R.drawable.power_off) }
-    var homeIcon by remember { mutableStateOf(R.drawable.logo_home) }
+    var homeIcon = R.drawable.logo_home
     var fontSizeTitule by remember { mutableStateOf(25.sp) }
     var SizeIcon by remember { mutableStateOf(40.dp) }
     var previousPage by remember { mutableStateOf("home") }
@@ -132,7 +132,7 @@ fun BaseScreen(
         // Agregamos las otras opciones de la misma forma
         "home" -> {
             title = R.string.Descripcion_Navbar_Icon_Profile_Screen
-            logoIcon = logoIcon
+            logoIcon = R.drawable.power_off
         }
         "per" -> {
             title = R.string.Name_Interfaz_Pedestrian_Access
