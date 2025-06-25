@@ -5,12 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,29 +32,29 @@ import com.google.firebase.auth.FirebaseAuth
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
+import com.zonedev.minapp.ui.theme.primary
+import com.zonedev.minapp.ui.theme.text
 
 @Composable
 fun LoginApp(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(background)
     ) {
         BlobUi()
-        Spacer(modifier = Modifier.height((-10).dp)) // Reduce la altura entre componentes
         CustomLoginScreen(navController, auth, onLoginSuccess)
     }
 }
-
+@Preview
 @Composable
 fun BlobUi() {
     val blob = painterResource(R.drawable.blob)
-    Box(modifier = Modifier.wrapContentHeight()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = blob,
             contentDescription = null,
@@ -66,12 +64,13 @@ fun BlobUi() {
         )
         Text(
             text = stringResource(R.string.blob_ui_text),
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = Color.White,
-            fontSize = 40.sp,
+            fontSize = 37.sp    ,
             fontFamily = bodyFontFamily,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.absoluteOffset(x = 20.dp, y = 80.dp)
+            textAlign = TextAlign.Justify,
+            modifier = Modifier
+                .absoluteOffset(x = 10.dp, y = 80.dp)
         )
     }
 }
@@ -87,7 +86,8 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(30.dp)
+            .padding(top = 160.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -97,12 +97,17 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
             onValueChange = { if (it.length <= 254) email = it },
         )
 
+        Space(16.dp)
+
         CustomTextField(
             value = password,
             label = stringResource(R.string.Label_name_Input_password),
             onValueChange = { password = it },
-            isPasswordField = true
+            isPasswordField = true,
+            iconTint =R.color.primary
         )
+
+        Space(16.dp)
 
         ButtonApp(stringResource(R.string.name_button_login)) {
             if (email.isBlank() || password.isBlank()) {
@@ -136,8 +141,23 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(text = "Error") },
-            text = { Text(text = errorMessage) },
+            title = { Text(
+                text = "ERROR",
+                color= primary,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 30.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth(),
+                )
+            },
+            text = { Text(
+                text = errorMessage,
+                color = text,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 6.dp))
+            },
             confirmButton = {
                 ButtonApp(
                     text = stringResource(R.string.Value_Button_Report),

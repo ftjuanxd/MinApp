@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -16,12 +15,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material3.CircularProgressIndicator
 import coil.compose.AsyncImagePainter
@@ -30,7 +30,9 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Separetor
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
+import com.zonedev.minapp.ui.theme.primary
 
 @Composable
 fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
@@ -87,7 +89,7 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
         }
     }
 
-    Divider(color = Color.Gray, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+    Separetor()
 
 
     CustomTextField(
@@ -121,9 +123,8 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
         isEnabled = false
     )
 
-    Divider(color = Color.Gray, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
     // Usamos ButtonApp aquí también
-    // ButtonApp(text = stringResource(R.string.Text_profileScreen_Button)) { showDialog = true }
+    ButtonApp(text = stringResource(R.string.Text_profileScreen_Button)) { showDialog = true }
 
     // Componente Modal
     if (showDialog) {
@@ -131,7 +132,14 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
             onDismissRequest = {
                 showDialog = false
             },
-            title = { Text(text = stringResource(R.string.Name_Modal_Download)) },
+            title = { Text(
+                text = stringResource(R.string.Name_Modal_Download),
+                color = primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) },
             text = { Text(text = stringResource(R.string.Content_Modal_Download)) },
             confirmButton = {
                 // Usa el botón personalizado dentro del modal

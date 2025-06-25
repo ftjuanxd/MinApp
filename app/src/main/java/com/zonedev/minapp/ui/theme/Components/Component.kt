@@ -3,6 +3,7 @@ package com.zonedev.minapp.ui.theme.Components
 
 import android.app.DatePickerDialog
 import android.graphics.Bitmap
+import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateDpAsState
@@ -31,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -68,6 +71,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -77,7 +81,6 @@ import androidx.navigation.NavController
 import com.google.firebase.Timestamp
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Model.Reporte
-import com.zonedev.minapp.ui.theme.Screen.Chat
 import com.zonedev.minapp.ui.theme.Screen.Element
 import com.zonedev.minapp.ui.theme.Screen.Observations
 import com.zonedev.minapp.ui.theme.Screen.Personal
@@ -109,75 +112,42 @@ fun BaseScreen(
 
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
-    var notificationIcon by remember { mutableStateOf(R.drawable.notificacion) }
     var logoIcon by remember { mutableStateOf(R.drawable.power_off) }
-    var fontSizeTitule by remember { mutableStateOf(20.sp) }
+    var homeIcon = R.drawable.logo_home
+    var fontSizeTitule by remember { mutableStateOf(25.sp) }
     var SizeIcon by remember { mutableStateOf(40.dp) }
-    var endPadding by remember { mutableStateOf(180.dp) }
     var previousPage by remember { mutableStateOf("home") }
 
     // Actualizamos los valores de Navbar según la opción seleccionada
     when (opcClic) {
         "obs" -> {
             title = R.string.Name_Interfaz_Observations
-            notificationIcon = R.drawable.notificacion
-            logoIcon = R.drawable.logo_home
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 100.dp
+            logoIcon = homeIcon
             previousPage = "obs"
         }
         "veh" -> {
             title = R.string.Name_Interfaz_Vehicular
-            notificationIcon = R.drawable.notificacion
-            logoIcon = R.drawable.logo_home
-            fontSizeTitule = 25.sp
-            SizeIcon = 40.dp
-            endPadding = 130.dp
+            logoIcon = homeIcon
             previousPage = "veh"
         }
         // Agregamos las otras opciones de la misma forma
         "home" -> {
             title = R.string.Descripcion_Navbar_Icon_Profile_Screen
-            notificationIcon = R.drawable.notificacion
             logoIcon = R.drawable.power_off
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 180.dp
-        }
-        "chat" -> {
-            title = R.string.Name_Interfaz_Chat
-            notificationIcon = R.drawable.notificacion_disable
-            logoIcon = R.drawable.logo_home
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 200.dp
         }
         "per" -> {
             title = R.string.Name_Interfaz_Pedestrian_Access
-            notificationIcon = R.drawable.notificacion
-            logoIcon =  R.drawable.logo_home
-            fontSizeTitule = 15.sp
-            SizeIcon = 40.dp
-            endPadding = 80.dp
+            logoIcon =  homeIcon
             previousPage = "per"
         }
         "ele" -> {
             title = R.string.Name_Interfaz_Element
-            notificationIcon = R.drawable.notificacion
-            logoIcon =  R.drawable.logo_home
-            fontSizeTitule = 25.sp
-            SizeIcon = 40.dp
-            endPadding = 130.dp
+            logoIcon =  homeIcon
             previousPage = "ele"
         }
         "rep" -> {
             title = R.string.Name_Interfaz_Report
-            notificationIcon = R.drawable.notificacion
-            logoIcon =  R.drawable.logo_home
-            fontSizeTitule = 20.sp
-            SizeIcon = 40.dp
-            endPadding = 200.dp
+            logoIcon =  homeIcon
             previousPage = "rep"
         }
     }
@@ -195,19 +165,17 @@ fun BaseScreen(
         ) {
             Navbar(
                 Titule = title,
-                Activenotificacion = notificationIcon,
                 home_power = logoIcon,
                 fontSizeTitule = fontSizeTitule,
                 SizeIcon = SizeIcon,
-                endPadding = endPadding,
                 onMenuClick = { isSidebarVisible = !isSidebarVisible },
                 onItemClick = { clickedOption ->
                     opcClic = clickedOption
                 },
                 navController,
-                previousPage =  previousPage
+                previousPage = previousPage
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Space(50.dp)
             Column(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.Top,
@@ -217,7 +185,6 @@ fun BaseScreen(
                     "home" -> ProfileScreen(guardiaViewModel)
                     "obs" -> Observations(guardiaId)
                     "veh" -> Vehicular(guardiaId)
-                    "chat" -> Chat()
                     "per" -> Personal(guardiaId)
                     "ele" -> Element(guardiaId)
                     "rep" -> ScreenReport(guardiaId)
@@ -252,8 +219,15 @@ fun Separetor() {
     Divider(
         color = Color.Gray,
         thickness = 1.dp,
-        modifier = Modifier.padding(vertical = 8.dp)
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .padding(top = 10.dp)
     )
+}
+
+@Composable
+fun Space(height: Dp = 8.dp){
+    Spacer(modifier= Modifier.height(height))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -265,7 +239,7 @@ fun CustomTextField(
     isEnabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
     @DrawableRes trailingIcon: Int? = null,
-    iconTint: Color? = null,
+    @ColorRes iconTint: Int? = null,
     pdHeight: Dp? = null,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -280,6 +254,13 @@ fun CustomTextField(
         true -> Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
         false -> Modifier.fillMaxWidth().wrapContentWidth(Alignment.Start)
         else -> Modifier.fillMaxWidth()
+    }
+
+    // Determina el color final que se usará para el tinte del icono
+    val resolvedIconTint = when {
+        iconTint != null -> colorResource(id = iconTint) // Si se proporciona un ID de recurso, úsalo
+        iconTint != null -> iconTint // Si se proporciona un objeto Color, úsalo
+        else -> Color.Black // Por defecto si no se proporciona ninguno
     }
 
     TextField(
@@ -306,16 +287,28 @@ fun CustomTextField(
                 )
             } else if (isPasswordField) {
                 // Alterna entre "Mostrar" y "Ocultar"
-                Text(
-                    text = if (passwordVisible) "Ocultar" else "Mostrar",
-                    color = iconTint ?: Color.Black,
+                //Text(
+                  //  text = if (passwordVisible) "Ocultar" else "Mostrar",
+                   // color = iconTint ?: Color.Black,
+                   // modifier = Modifier.clickable { passwordVisible = !passwordVisible }
+                //)
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                Icon(
+                    imageVector = image,
+                    contentDescription = description,
+                    tint = resolvedIconTint,
                     modifier = Modifier.clickable { passwordVisible = !passwordVisible }
                 )
             } else if (trailingIcon != null) {
                 Icon(
                     painter = painterResource(id = trailingIcon),
                     contentDescription = null,
-                    tint = iconTint ?: Color.Black
+                    tint = resolvedIconTint
                 )
             }
         },
@@ -335,8 +328,8 @@ fun CustomTextField(
 @Composable
 fun DatePickerWithCustomTextField(
     label: String,
-    initialDate: com.google.firebase.Timestamp?,
-    onDateSelected: (com.google.firebase.Timestamp) -> Unit,
+    initialDate: Timestamp?,
+    onDateSelected: (Timestamp) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -376,11 +369,9 @@ fun DatePickerWithCustomTextField(
 @Composable
 fun Navbar(
     @StringRes Titule: Int,
-    @DrawableRes Activenotificacion: Int,
     @DrawableRes home_power: Int,
     fontSizeTitule: TextUnit,
     SizeIcon: Dp,
-    endPadding: Dp,
     onMenuClick: () -> Unit, // Para manejar el clic en el menú
     onItemClick: (String) -> Unit, // Manejar los clics de los ítems
     navController: NavController,
@@ -404,28 +395,17 @@ fun Navbar(
                 .clickable { onMenuClick() } // Abre/cierra el sidebar
         )
         Text(
-            text = stringResource(id=Titule),
+            text = stringResource(id = Titule),
             color = background,
             fontSize = fontSizeTitule,
             fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(end = endPadding, top = 5.dp)
+            textAlign = TextAlign.Left,
+            modifier = Modifier
+                .padding(start = 8.dp) // Add some padding between icon and text
+                .weight(1f) // Allows Text to take available space
+                .padding(top = 2.dp)
         )
         Row {
-            Icon(
-                painter = painterResource(id = Activenotificacion),
-                contentDescription = stringResource(R.string.Descripcion_Navbar_Icon_Notificacion),
-                tint = colorResource(R.color.background),
-                modifier = Modifier
-                    .size(SizeIcon)
-                    .clickable {
-                        if (Activenotificacion == R.drawable.notificacion_disable) {
-                            // Vuelve a la pantalla anterior
-                            onItemClick(previousPage)
-                        } else {
-                            onItemClick("chat")
-                        }
-                    }
-            )
             Icon(
                 painter = painterResource(id = home_power),
                 contentDescription = stringResource(R.string.Descripcion_Navbar_Icon_Power),
@@ -471,61 +451,6 @@ fun ButtonApp(
 }
 
 @Composable
-fun SegmentedButton(ScanComponent: @Composable () -> Unit, TextComponent: @Composable () -> Unit) {
-    // Estado que almacena qué botón está seleccionado (0 para Scan Id, 1 para Write)
-    var selectedButton by remember { mutableStateOf(0) }
-
-    Row(
-        modifier = Modifier
-            .border(5.dp, color_component, RoundedCornerShape(16.dp)),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Button(
-            onClick = { selectedButton = 0 }, // Acción de seleccionar Scan Id
-            shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
-            colors = if (selectedButton == 0) {
-                // Si el botón está seleccionado, cambia el color
-                ButtonDefaults.buttonColors(containerColor = color_component, contentColor = background)
-            } else {
-                // Si no está seleccionado, usa estos colores
-                ButtonDefaults.buttonColors(containerColor = background, contentColor = color_component)
-            },
-            modifier = Modifier
-                .weight(2f)//
-        ) {
-            Text(
-                text = stringResource(R.string.Value_Default_Label_Camera),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Button(
-            onClick = { selectedButton = 1 }, // Acción de seleccionar Write
-            shape = RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp),
-            colors = if (selectedButton == 1) {
-                ButtonDefaults.buttonColors(containerColor = color_component, contentColor = background)
-            } else {
-                ButtonDefaults.buttonColors(containerColor = background, contentColor = color_component)
-            },
-            modifier = Modifier
-                .weight(2f)
-        ) {
-            Text(
-                text = stringResource(R.string.Value_Segmented_Button),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold)
-        }
-    }
-    // Aquí se muestra el contenido según el botón seleccionado
-    Spacer(modifier = Modifier.height(16.dp)) // Espacio entre los botones y el contenido
-    when (selectedButton) {
-        0 -> ScanComponent() // Mostrar contenido de Scan Id
-        1 -> TextComponent()   // Mostrar contenido de Write
-    }
-}
-
-@Composable
 fun CheckHold(): MutableState<Boolean> {
     // Estado del Checkbox
     val isChecked = remember { mutableStateOf(false) }
@@ -551,7 +476,7 @@ fun CheckHold(): MutableState<Boolean> {
                 )
             )
         }
-        Spacer(modifier = Modifier.width(8.dp)) // Espacio entre el Checkbox y el texto
+        Space(8.dp)
         Text(
             text = stringResource(R.string.Name_CheckHolder),
             fontSize = 15.sp
@@ -562,13 +487,12 @@ fun CheckHold(): MutableState<Boolean> {
     return isChecked
 }
 
-
 @Composable
 fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,onAutoChange: (String) -> Unit,descrip:String,onDescripChange: (String) -> Unit){
 
     CustomTextField(
         value = destiny,
-        label = "Destiny",
+        label = "Destino",
         onValueChange = onDestinyChange,
         isEnabled = true,
         KeyboardOptions.Default.copy(
@@ -576,10 +500,11 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
             imeAction = ImeAction.Next,
         )
     )
+    Space()
     //TextField Authorization
     CustomTextField(
         value = auto,
-        label = "Authorization",
+        label = "Autorizacion",
         onValueChange = onAutoChange,
         isEnabled = true,
         KeyboardOptions.Default.copy(
@@ -587,10 +512,11 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
             imeAction = ImeAction.Next,
         )
     )
+    Space()
     //TextField Description
     CustomTextField(
         value = descrip,
-        label = "Description",
+        label = "Descripcion",
         onValueChange = onDescripChange,
         isEnabled = true,
         KeyboardOptions.Default.copy(
@@ -599,7 +525,6 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
         ),
         pdHeight = 80.dp
     )
-
 }
 
 @Composable
@@ -610,8 +535,8 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
     var idFiltro by remember { mutableStateOf("") }
     var nombreFiltro by remember { mutableStateOf("") }
     var tipoFiltro by remember { mutableStateOf(selectedOption) }
-    var fechaInicio by remember { mutableStateOf<com.google.firebase.Timestamp?>(null) }
-    var fechaFin by remember { mutableStateOf<com.google.firebase.Timestamp?>(null) }
+    var fechaInicio by remember { mutableStateOf<Timestamp?>(null) }
+    var fechaFin by remember { mutableStateOf<Timestamp?>(null) }
 
     // Actualizar los reportes cada vez que cambian los filtros
     LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin) {
@@ -662,7 +587,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Space(12.dp)
 
         CustomTextField(
             value = idFiltro,
@@ -671,7 +596,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(12.dp ))
+        Space(12.dp)
 
         CustomTextField(
             value = nombreFiltro,
@@ -680,11 +605,10 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Space(12.dp)
     }
-
     // Mostrar los reportes filtrados
-    Spacer(modifier = Modifier.height(20.dp))
+    Space(20.dp)
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -694,7 +618,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
 }
 
 // Función para convertir milisegundos a una fecha legible
-fun formatDate(timestamp: com.google.firebase.Timestamp): String {
+fun formatDate(timestamp: Timestamp): String {
     val date = timestamp.toDate()
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return dateFormat.format(date)
@@ -727,8 +651,6 @@ fun Pagination(
                 Text("Previous", color = if (currentPage > 1)  color_component else background)
             }
 
-            //Spacer(modifier = Modifier.width(8.dp))
-
             // Números de páginas
             for (page in 1..totalPages) {
                 TextButton(
@@ -742,8 +664,6 @@ fun Pagination(
                     )
                 }
             }
-
-            //Spacer(modifier = Modifier.width(8.dp))
 
             // Botón de "Next"
             TextButton(
@@ -774,11 +694,10 @@ fun PaginationScreen(reportes: List<Reporte>) {
             onPageChanged = { newPage -> currentPage = newPage }
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
+        Space(10.dp)
         ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Space(16.dp)
     }
 }
 @Composable
@@ -877,7 +796,7 @@ fun SideBar(
                         onItemClick("obs") // Clic en "Observations"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_vehicular),
                 contentDescription = null,
@@ -888,7 +807,7 @@ fun SideBar(
                         onItemClick("veh") // Clic en "Vehicular"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_personal),
                 contentDescription = null,
@@ -899,7 +818,7 @@ fun SideBar(
                         onItemClick("per") // Clic en "Personal"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_elements),
                 contentDescription = null,
@@ -910,7 +829,7 @@ fun SideBar(
                         onItemClick("ele") // Clic en "Elementos"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_report),
                 contentDescription = null,
@@ -921,7 +840,6 @@ fun SideBar(
                         onItemClick("rep") // Clic en "Report"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
         }
     }
 }
