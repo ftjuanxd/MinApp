@@ -71,6 +71,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -112,7 +113,7 @@ fun BaseScreen(
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
     var logoIcon by remember { mutableStateOf(R.drawable.power_off) }
-    var homeIcon by remember { mutableStateOf(R.drawable.logo_home) }
+    var homeIcon = R.drawable.logo_home
     var fontSizeTitule by remember { mutableStateOf(25.sp) }
     var SizeIcon by remember { mutableStateOf(40.dp) }
     var previousPage by remember { mutableStateOf("home") }
@@ -132,7 +133,7 @@ fun BaseScreen(
         // Agregamos las otras opciones de la misma forma
         "home" -> {
             title = R.string.Descripcion_Navbar_Icon_Profile_Screen
-            logoIcon = logoIcon
+            logoIcon = R.drawable.power_off
         }
         "per" -> {
             title = R.string.Name_Interfaz_Pedestrian_Access
@@ -174,7 +175,7 @@ fun BaseScreen(
                 navController,
                 previousPage = previousPage
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Space(50.dp)
             Column(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.Top,
@@ -218,8 +219,15 @@ fun Separetor() {
     Divider(
         color = Color.Gray,
         thickness = 1.dp,
-        modifier = Modifier.padding(vertical = 8.dp)
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .padding(top = 10.dp)
     )
+}
+
+@Composable
+fun Space(height: Dp = 8.dp){
+    Spacer(modifier= Modifier.height(height))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -387,11 +395,15 @@ fun Navbar(
                 .clickable { onMenuClick() } // Abre/cierra el sidebar
         )
         Text(
-            text = stringResource(id=Titule),
+            text = stringResource(id = Titule),
             color = background,
             fontSize = fontSizeTitule,
             fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(top = 2.dp)
+            textAlign = TextAlign.Left,
+            modifier = Modifier
+                .padding(start = 8.dp) // Add some padding between icon and text
+                .weight(1f) // Allows Text to take available space
+                .padding(top = 2.dp)
         )
         Row {
             Icon(
@@ -464,7 +476,7 @@ fun CheckHold(): MutableState<Boolean> {
                 )
             )
         }
-        Spacer(modifier = Modifier.width(8.dp)) // Espacio entre el Checkbox y el texto
+        Space(8.dp)
         Text(
             text = stringResource(R.string.Name_CheckHolder),
             fontSize = 15.sp
@@ -474,7 +486,6 @@ fun CheckHold(): MutableState<Boolean> {
     // Retornar el estado observable de isChecked
     return isChecked
 }
-
 
 @Composable
 fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,onAutoChange: (String) -> Unit,descrip:String,onDescripChange: (String) -> Unit){
@@ -489,6 +500,7 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
             imeAction = ImeAction.Next,
         )
     )
+    Space()
     //TextField Authorization
     CustomTextField(
         value = auto,
@@ -500,6 +512,7 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
             imeAction = ImeAction.Next,
         )
     )
+    Space()
     //TextField Description
     CustomTextField(
         value = descrip,
@@ -512,7 +525,6 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
         ),
         pdHeight = 80.dp
     )
-
 }
 
 @Composable
@@ -575,7 +587,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Space(12.dp)
 
         CustomTextField(
             value = idFiltro,
@@ -584,7 +596,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(12.dp ))
+        Space(12.dp)
 
         CustomTextField(
             value = nombreFiltro,
@@ -593,11 +605,10 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Space(12.dp)
     }
-
     // Mostrar los reportes filtrados
-    Spacer(modifier = Modifier.height(20.dp))
+    Space(20.dp)
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -640,8 +651,6 @@ fun Pagination(
                 Text("Previous", color = if (currentPage > 1)  color_component else background)
             }
 
-            //Spacer(modifier = Modifier.width(8.dp))
-
             // Números de páginas
             for (page in 1..totalPages) {
                 TextButton(
@@ -655,8 +664,6 @@ fun Pagination(
                     )
                 }
             }
-
-            //Spacer(modifier = Modifier.width(8.dp))
 
             // Botón de "Next"
             TextButton(
@@ -687,11 +694,10 @@ fun PaginationScreen(reportes: List<Reporte>) {
             onPageChanged = { newPage -> currentPage = newPage }
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
+        Space(10.dp)
         ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Space(16.dp)
     }
 }
 @Composable
@@ -790,7 +796,7 @@ fun SideBar(
                         onItemClick("obs") // Clic en "Observations"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_vehicular),
                 contentDescription = null,
@@ -801,7 +807,7 @@ fun SideBar(
                         onItemClick("veh") // Clic en "Vehicular"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_personal),
                 contentDescription = null,
@@ -812,7 +818,7 @@ fun SideBar(
                         onItemClick("per") // Clic en "Personal"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_elements),
                 contentDescription = null,
@@ -823,7 +829,7 @@ fun SideBar(
                         onItemClick("ele") // Clic en "Elementos"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Space(10.dp)
             Icon(
                 painter = painterResource(R.drawable.logo_report),
                 contentDescription = null,
@@ -834,7 +840,6 @@ fun SideBar(
                         onItemClick("rep") // Clic en "Report"
                     }
             )
-            Spacer(modifier = Modifier.height(10.dp))
         }
     }
 }

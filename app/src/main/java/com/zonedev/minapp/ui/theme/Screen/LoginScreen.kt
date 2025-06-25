@@ -5,10 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -33,9 +32,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
+import com.zonedev.minapp.ui.theme.primary
+import com.zonedev.minapp.ui.theme.text
 
 @Composable
 fun LoginApp(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
@@ -95,7 +97,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
             onValueChange = { if (it.length <= 254) email = it },
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Space(16.dp)
 
         CustomTextField(
             value = password,
@@ -105,7 +107,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
             iconTint =R.color.primary
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Space(16.dp)
 
         ButtonApp(stringResource(R.string.name_button_login)) {
             if (email.isBlank() || password.isBlank()) {
@@ -139,8 +141,23 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(text = "Error") },
-            text = { Text(text = errorMessage) },
+            title = { Text(
+                text = "ERROR",
+                color= primary,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 30.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth(),
+                )
+            },
+            text = { Text(
+                text = errorMessage,
+                color = text,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 6.dp))
+            },
             confirmButton = {
                 ButtonApp(
                     text = stringResource(R.string.Value_Button_Report),

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.10.1"
+agp = "8.11.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -16,7 +16,7 @@ services = "4.4.2"
 crashlytics = "3.0.2"
 coil = "2.7.0"
 mlkit = "16.0.1"
-
+splashsc = "1.0.1"
 
 [libraries]
 
@@ -48,6 +48,7 @@ coil = {module = "io.coil-kt:coil-compose", version.ref = "coil"}
 
 ml-kit = {module = "com.google.mlkit:text-recognition", version.ref = "mlkit"}
 
+splashscreen = {group = "androidx.core", name="core-splashscreen", version.ref = "splashsc"}
 [plugins]
 
 android-application = { id = "com.android.application", version.ref = "agp" }

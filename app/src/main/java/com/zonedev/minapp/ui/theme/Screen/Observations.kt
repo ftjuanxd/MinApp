@@ -38,6 +38,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
     var observation by remember { mutableStateOf("") }
     var tipo_report ="Observations"
     var showDialog by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
 
     var evidencias by remember { mutableStateOf<Uri?>(null) }
     //TextField Subject
@@ -66,60 +67,93 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
         // Guarda el string base64 en tu colección de Firestore
         evidencias = base64Image
     }*/
-
-    Separetor()
     // Usamos ButtonApp aquí también
     ButtonApp(stringResource(R.string.button_submit)) {
-        val datos = mapOf(
-            "Subject" to subject.lowercase(),
-            "Observation" to observation.lowercase(),
-            "Evidencias" to  evidencias.toString()
-        )
+        if (subject.isEmpty() || observation.isEmpty()) {
+            showDialog = true
+            message = "Error"
+        }else {
+            val datos = mapOf(
+                "Subject" to subject.lowercase(),
+                "Observation" to observation.lowercase(),
+                "Evidencias" to  evidencias.toString()
+            )
 
-        val parametros = crearParametrosParaReporte(tipo_report, datos)
+            val parametros = crearParametrosParaReporte(tipo_report, datos)
 
-        reporteViewModel.crearReporte(tipo_report,parametros,guardiaId)
-        showDialog = true
+            reporteViewModel.crearReporte(tipo_report,parametros,guardiaId)
+            showDialog = true
+            message = "Correcto"
+        }
     }
+    Separetor()
 
     // Mostrar el modal si showModal es true
 
     if (showDialog) {
+        // Variables para el contenido dinámico del diálogo
+        val dialogTitle: String
+        val dialogContent: String
+        val confirmButtonText: String
+
+        // Determina el contenido del diálogo basado en el valor de 'message'
+        when (message) {
+            "Error" -> {
+                dialogTitle = "Error" // Define en strings.xml
+                dialogContent = "El reporte realizdo tiene campos en blanco" // Define en strings.xml
+                confirmButtonText = stringResource(R.string.Value_Button_Report) // Reutiliza o define uno nuevo
+            }
+            "Correcto" -> {
+                dialogTitle = stringResource(R.string.Name_Modal_Report)
+                dialogContent = stringResource(R.string.Content_Modal_Report)// Define en strings.xml
+                confirmButtonText = stringResource(R.string.Value_Button_Report)
+            }
+            // Puedes añadir más casos si tienes otros tipos de mensajes o errores
+            else -> {
+                // Caso por defecto o para otros mensajes que no estén mapeados
+                dialogTitle = stringResource(R.string.Name_Modal_Report)
+                dialogContent = stringResource(R.string.Content_Modal_Report)
+                confirmButtonText = stringResource(R.string.Value_Button_Report)
+            }
+        }
+
         AlertDialog(
             onDismissRequest = {
                 showDialog = false
                 subject = ""
                 observation = ""
                 evidencias = null
+                message = "" // Limpia el mensaje al cerrar el diálogo
             },
-            title = { Text(
-                text = stringResource(R.string.Name_Modal_Report),
-                color = primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) },
-            text = { Text(
-                text = stringResource(R.string.Content_Modal_Report),
-                color = Color.Gray,
-                modifier = Modifier
-                    .padding(bottom = 6.dp)
-            ) },
+            title = {
+                Text(
+                    text = dialogTitle, // Usa el título dinámico
+                    color = primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            },
+            text = {
+                Text(
+                    text = dialogContent, // Usa el contenido dinámico
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+            },
             confirmButton = {
-                // Usa el botón personalizado dentro del modal
                 ButtonApp(
-                    text = stringResource(R.string.Value_Button_Report),
+                    text = confirmButtonText, // Usa el texto del botón dinámico
                     onClick = {
-                        showDialog = false // Cierra el modal cuando se hace clic en "Aceptar"
+                        showDialog = false
                         subject = ""
                         observation = ""
                         evidencias = null
+                        message = "" // Limpia el mensaje al cerrar el diálogo
                     },
-                    //modifier = Modifier.fillMaxWidth()
                 )
             }
         )
     }
-
 }

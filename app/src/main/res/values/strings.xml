@@ -36,4 +36,8 @@
     <string name="Content_Modal_Download">El Manual fue Descargado</string>
     <string name="Label_Value_Central">Central</string>
     <string name="Label_Value_Employ">Carlos</string>
+    <string name="Name_Minuta_Per">Personal</string>
+    <string name="Name_Minuta_Veh">Vehicular</string>
+    <string name="Name_Minuta_Ele">Elemento</string>
+    <string name="Name_Minuta_Obs">Observations</string>
 </resources>

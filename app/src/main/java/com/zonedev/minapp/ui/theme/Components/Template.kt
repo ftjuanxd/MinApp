@@ -1,8 +1,7 @@
 package com.zonedev.minapp.ui.theme.Components
 
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -14,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -78,6 +78,7 @@ fun Template_Text(
             imeAction = ImeAction.Next,
         )
     )
+    Space(8.dp)
 
     CustomTextField(
         value = name,
@@ -89,6 +90,8 @@ fun Template_Text(
             imeAction = ImeAction.Next,
         )
     )
+
+    Space(8.dp)
 
     // Pasamos una lambda para resetear los valores de Id y name
     Components_Template(Id, name, Tipo_Report, guardiaId) {
@@ -110,29 +113,48 @@ fun Components_Template(
     var auto by remember { mutableStateOf("") }
     var descrip by remember { mutableStateOf("") }
 
-    var showDialog by remember { mutableStateOf(false) }
+    // Estados para controlar la visibilidad de los diálogos
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    var showValidationErrorDialog by remember { mutableStateOf(false) }
 
-    val holdCheckState = CheckHold() // Esto ahora tiene el estado observable
+    val holdCheckState = CheckHold()
 
     FieldsThemes(destiny, { destiny = it }, auto, { auto = it }, descrip, { descrip = it })
 
+    // El botón principal ahora contiene la lógica de validación.
+    ButtonApp(stringResource(R.string.button_submit)) {
+        // --- LÓGICA DE VERIFICACIÓN ---
+        // Se comprueba que ningún campo esencial esté vacío antes de continuar.
+        val isFormValid = Id.isNotBlank() && name.isNotBlank() &&
+                destiny.isNotBlank() && auto.isNotBlank() && descrip.isNotBlank()
+
+        if (isFormValid) {
+            // Si el formulario es válido, muestra el diálogo de confirmación.
+            showConfirmationDialog = true
+        } else {
+            // Si es inválido, muestra un diálogo de error.
+            showValidationErrorDialog = true
+        }
+    }
+
     Separetor()
 
-    ButtonApp(stringResource(R.string.button_submit)) { showDialog = true }
-
-    if (showDialog) {
+    // --- DIÁLOGO DE CONFIRMACIÓN (SOLO SE MUESTRA SI LA VALIDACIÓN ES EXITOSA) ---
+    if (showConfirmationDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showConfirmationDialog = false },
             title = {
                 Text(
                     text = stringResource(R.string.Name_Modal_Report),
-                    color = primary,
+                    color = colorResource(id=R.color.primary),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Space(8.dp)
             },
             text = {
                 Text(
@@ -142,9 +164,10 @@ fun Components_Template(
                 )
             },
             confirmButton = {
-                ButtonApp(
-                    text = stringResource(R.string.Value_Button_Report),
+                ButtonApp( // Usando Button de Material3 para consistencia
                     onClick = {
+                        // La lógica para crear el reporte se mantiene aquí,
+                        // ya que solo se ejecuta tras la confirmación del usuario.
                         val datos = if (tipo_report != "Elemento") {
                             mapOf(
                                 "Id_placa" to Id.lowercase(),
@@ -155,7 +178,7 @@ fun Components_Template(
                             )
                         } else {
                             mapOf(
-                                "Imgelement" to "",
+                                "Imgelement" to "", // Considerar cómo se maneja la imagen
                                 "Id_placa" to Id.lowercase(),
                                 "Name" to name.lowercase(),
                                 "Destino" to destiny.lowercase(),
@@ -167,20 +190,48 @@ fun Components_Template(
                         val parametros = crearParametrosParaReporte(tipo_report, datos)
                         reporteViewModel.crearReporte(tipo_report, parametros, guardiaId)
 
-                        // Luego puedes acceder a holdCheckState.value para ver si el checkbox está marcado o no.
+                        // Lógica para resetear los campos
                         if (holdCheckState.value) {
-                            onResetFields?.let { it() }
-                            // Aquí haces lo que necesites cuando esté marcado
+                            onResetFields?.invoke()
                         } else {
-                            // Aquí haces lo que necesites cuando esté desmarcado
-                            //img = ""
                             destiny = ""
                             auto = ""
                             descrip = ""
-                            onResetFields?.let { it() }
+                            onResetFields?.invoke()
                         }
-                        showDialog = false
-                    }
+                        showConfirmationDialog = false
+                    }, text = stringResource(id=R.string.Value_Button_Report)
+                )
+            }
+        )
+    }
+
+    // --- DIÁLOGO DE ERROR DE VALIDACIÓN ---
+    if (showValidationErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showValidationErrorDialog = false },
+            title = { Text(
+                text="Campos Incompletos",
+                color= primary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth(),
+                )
+                Space(8.dp)
+            },
+
+            text = { Text(
+                text="Por favor, asegúrese de llenar todos los campos antes de generar el reporte.",
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 6.dp))
+            },
+            confirmButton = {
+                ButtonApp (
+                    text=stringResource(id=R.string.Value_Button_Report),
+                    onClick = { showValidationErrorDialog = false }
                 )
             }
         )
