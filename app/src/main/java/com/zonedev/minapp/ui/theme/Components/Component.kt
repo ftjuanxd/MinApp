@@ -39,10 +39,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -108,7 +108,6 @@ fun BaseScreen(
     var isSidebarVisible by remember { mutableStateOf(false) }
 
     // Variable para marcar si vienes desde "home"
-    var isFromHome by remember { mutableStateOf(false) }
 
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
@@ -215,13 +214,13 @@ fun BaseScreen(
 }
 
 @Composable
-fun Separetor() {
-    Divider(
-        color = Color.Gray,
-        thickness = 1.dp,
+fun Separator() {
+    HorizontalDivider(
         modifier = Modifier
             .padding(vertical = 8.dp)
-            .padding(top = 10.dp)
+            .padding(top = 10.dp),
+        thickness = 1.dp,
+        color = Color.Gray
     )
 }
 
@@ -259,7 +258,6 @@ fun CustomTextField(
     // Determina el color final que se usará para el tinte del icono
     val resolvedIconTint = when {
         iconTint != null -> colorResource(id = iconTint) // Si se proporciona un ID de recurso, úsalo
-        iconTint != null -> iconTint // Si se proporciona un objeto Color, úsalo
         else -> Color.Black // Por defecto si no se proporciona ninguno
     }
 
@@ -288,9 +286,9 @@ fun CustomTextField(
             } else if (isPasswordField) {
                 // Alterna entre "Mostrar" y "Ocultar"
                 //Text(
-                  //  text = if (passwordVisible) "Ocultar" else "Mostrar",
-                   // color = iconTint ?: Color.Black,
-                   // modifier = Modifier.clickable { passwordVisible = !passwordVisible }
+                //  text = if (passwordVisible) "Ocultar" else "Mostrar",
+                // color = iconTint ?: Color.Black,
+                // modifier = Modifier.clickable { passwordVisible = !passwordVisible }
                 //)
                 val image = if (passwordVisible)
                     Icons.Filled.Visibility
@@ -561,7 +559,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             var selectedTipo by remember { mutableStateOf(tipoFiltro) }
 
             ButtonApp(
-                text = "$selectedTipo",
+                text = selectedTipo,
                 iconButton = true,
             ) {
                 expandedTipo = true

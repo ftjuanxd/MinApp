@@ -20,10 +20,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zonedev.minapp.Camera
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.Separetor
+import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.Components.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.theme.primary
@@ -39,8 +40,15 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
     var tipo_report ="Observations"
     var showDialog by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
+    var evidenciasUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
 
     var evidencias by remember { mutableStateOf<Uri?>(null) }
+
+    Camera(
+        imageUri = evidenciasUri,
+        onImageCaptured = { uri -> evidenciasUri = uri }
+    )
+
     //TextField Subject
     CustomTextField(
         value = subject,
@@ -63,10 +71,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
         ),
         pdHeight = 200.dp
     )
-    /*CaptureImageScreen("evidencias") { base64Image ->
-        // Guarda el string base64 en tu colección de Firestore
-        evidencias = base64Image
-    }*/
+
     // Usamos ButtonApp aquí también
     ButtonApp(stringResource(R.string.button_submit)) {
         if (subject.isEmpty() || observation.isEmpty()) {
@@ -76,7 +81,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
             val datos = mapOf(
                 "Subject" to subject.lowercase(),
                 "Observation" to observation.lowercase(),
-                "Evidencias" to  evidencias.toString()
+                "Evidencias" to evidenciasUri.toString()
             )
 
             val parametros = crearParametrosParaReporte(tipo_report, datos)
@@ -86,7 +91,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
             message = "Correcto"
         }
     }
-    Separetor()
+    Separator()
 
     // Mostrar el modal si showModal es true
 
@@ -122,7 +127,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
                 showDialog = false
                 subject = ""
                 observation = ""
-                evidencias = null
+                evidencias = Uri.EMPTY
                 message = "" // Limpia el mensaje al cerrar el diálogo
             },
             title = {
@@ -149,7 +154,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
                         showDialog = false
                         subject = ""
                         observation = ""
-                        evidencias = null
+                        evidencias = Uri.EMPTY
                         message = "" // Limpia el mensaje al cerrar el diálogo
                     },
                 )

@@ -40,4 +40,5 @@
     <string name="Name_Minuta_Veh">Vehicular</string>
     <string name="Name_Minuta_Ele">Elemento</string>
     <string name="Name_Minuta_Obs">Observations</string>
+    <string name="Title_Error">Error</string>
 </resources>

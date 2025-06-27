@@ -19,7 +19,6 @@ import com.google.firebase.ktx.Firebase
 import com.zonedev.minapp.ui.theme.Components.BaseScreen
 import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.Screen.LoginApp
-import com.zonedev.minapp.ui.theme.Screen.MainScreen
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -56,9 +55,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 NavHost(navController, startDestination = "login") {
-                    composable("main") {
-                        MainScreen(navController) // Splash Screen
-                    }
                     composable("login") {
                         LoginApp(navController, auth) { userId ->
                             idguard = userId // Guarda el userId en la variable

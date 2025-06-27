@@ -137,7 +137,7 @@ fun Components_Template(
         }
     }
 
-    Separetor()
+    Separator()
 
     // --- DIÁLOGO DE CONFIRMACIÓN (SOLO SE MUESTRA SI LA VALIDACIÓN ES EXITOSA) ---
     if (showConfirmationDialog) {

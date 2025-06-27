@@ -30,7 +30,7 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.Separetor
+import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
 import com.zonedev.minapp.ui.theme.primary
 
@@ -89,7 +89,7 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
         }
     }
 
-    Separetor()
+    Separator()
 
 
     CustomTextField(
@@ -107,12 +107,6 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
     CustomTextField(
         value = guardia.firstOrNull()?.id ?: "Data not available",
         label = "N° Id",
-        onValueChange = {},
-        isEnabled = false
-    )
-    CustomTextField(
-        value = guardia.firstOrNull()?.genre ?: "Data not available",
-        label = "Genre",
         onValueChange = {},
         isEnabled = false
     )

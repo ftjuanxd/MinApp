@@ -69,10 +69,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+     # - name: Upload APK artifact
+      #  uses: actions/upload-artifact@v3
+       # with:
+        #  name: debug-apk
+         # path: app/build/outputs/apk/debug/app-debug.apk
 
   # Agrega jobs de despliegue a Google Play o Firebase si los necesitas.
