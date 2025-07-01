@@ -1,8 +1,7 @@
 package com.zonedev.minapp.ui.theme.Components
 
 
-import android.app.DatePickerDialog
-import android.graphics.Bitmap
+import android.net.Uri
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -39,20 +38,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,9 +53,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,13 +64,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.firebase.Timestamp
+import coil.compose.rememberAsyncImagePainter
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Model.Reporte
 import com.zonedev.minapp.ui.theme.Screen.Element
@@ -88,14 +80,10 @@ import com.zonedev.minapp.ui.theme.Screen.ProfileScreen
 import com.zonedev.minapp.ui.theme.Screen.ScreenReport
 import com.zonedev.minapp.ui.theme.Screen.Vehicular
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
-import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.primary
 import com.zonedev.minapp.ui.theme.text
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 @Composable
 fun BaseScreen(
@@ -108,7 +96,6 @@ fun BaseScreen(
     var isSidebarVisible by remember { mutableStateOf(false) }
 
     // Variable para marcar si vienes desde "home"
-    var isFromHome by remember { mutableStateOf(false) }
 
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
@@ -215,13 +202,13 @@ fun BaseScreen(
 }
 
 @Composable
-fun Separetor() {
-    Divider(
-        color = Color.Gray,
-        thickness = 1.dp,
+fun Separator() {
+    HorizontalDivider(
         modifier = Modifier
             .padding(vertical = 8.dp)
-            .padding(top = 10.dp)
+            .padding(top = 10.dp),
+        thickness = 1.dp,
+        color = Color.Gray
     )
 }
 
@@ -243,23 +230,25 @@ fun CustomTextField(
     pdHeight: Dp? = null,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    bitmap: Bitmap? = null,
     isUser: Boolean? = null,
-    isPasswordField: Boolean = false // Nuevo parámetro para indicar si es un campo de contraseña
+    isPasswordField: Boolean = false,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
     // Determina la alineación según isUser
     val alignmentModifier = when (isUser) {
-        true -> Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
-        false -> Modifier.fillMaxWidth().wrapContentWidth(Alignment.Start)
+        true -> Modifier
+            .fillMaxWidth()
+            .wrapContentWidth(Alignment.End)
+        false -> Modifier
+            .fillMaxWidth()
+            .wrapContentWidth(Alignment.Start)
         else -> Modifier.fillMaxWidth()
     }
 
     // Determina el color final que se usará para el tinte del icono
     val resolvedIconTint = when {
         iconTint != null -> colorResource(id = iconTint) // Si se proporciona un ID de recurso, úsalo
-        iconTint != null -> iconTint // Si se proporciona un objeto Color, úsalo
         else -> Color.Black // Por defecto si no se proporciona ninguno
     }
 
@@ -279,19 +268,8 @@ fun CustomTextField(
         visualTransformation = if (isPasswordField && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = if (isPasswordField) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
         trailingIcon = {
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp)
-                )
-            } else if (isPasswordField) {
-                // Alterna entre "Mostrar" y "Ocultar"
-                //Text(
-                  //  text = if (passwordVisible) "Ocultar" else "Mostrar",
-                   // color = iconTint ?: Color.Black,
-                   // modifier = Modifier.clickable { passwordVisible = !passwordVisible }
-                //)
+            if (isPasswordField)
+            {
                 val image = if (passwordVisible)
                     Icons.Filled.Visibility
                 else Icons.Filled.VisibilityOff
@@ -325,45 +303,55 @@ fun CustomTextField(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerWithCustomTextField(
+fun CustomTextFieldCamera(
     label: String,
-    initialDate: Timestamp?,
-    onDateSelected: (Timestamp) -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit,
+    imageUri: Uri? = null
 ) {
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(100.dp)
+            .clickable { onClick()},
+    ) {
+        TextField(
+            value = "",
+            onValueChange = {},
+            readOnly = true,
+            enabled = false,
+            label = { Text(label,color = color_component) },
+            modifier = Modifier
+                .fillMaxSize()
+                .border(2.dp, primary, RoundedCornerShape(12.dp)),
+            colors = TextFieldDefaults.textFieldColors(
+                disabledIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                disabledLabelColor = Color.Transparent,
+                containerColor = background,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = text,
+                focusedTextColor = text
+            )
+        )
+        val hasImage = imageUri != null && imageUri.toString().isNotEmpty()
 
-    // Estado para almacenar la fecha seleccionada como texto
-    val selectedDateText = remember { mutableStateOf(initialDate?.let { formatDate(it) } ?: "") }
-
-    // CustomTextField que actúa como gatillo para abrir el DatePickerDialog
-    CustomTextField(
-        value = selectedDateText.value,
-        label = label,
-        onValueChange = { /* El valor no se modifica manualmente */ },
-        onClick = {
-            // Abrir el DatePickerDialog al hacer clic
-            DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    // Actualizar el calendario con la fecha seleccionada
-                    calendar.set(year, month, dayOfMonth, 0, 0, 0)
-                    val timestamp = Timestamp(calendar.time)
-
-                    // Actualizar el estado con la fecha seleccionada
-                    selectedDateText.value = formatDate(timestamp)
-                    // Enviar el valor de la fecha seleccionada a onDateSelected
-                    onDateSelected(timestamp)
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
-        },
-        modifier = modifier
-    )
+        Image(
+            painter = if (hasImage)
+                rememberAsyncImagePainter(imageUri)
+            else
+                painterResource(R.drawable.ic_image),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(120.dp)
+                .padding(6.dp)
+                .alpha(0.3f)
+        )
+    }
 }
 
 @Composable
@@ -449,7 +437,7 @@ fun ButtonApp(
         }
     }
 }
-
+@Preview
 @Composable
 fun CheckHold(): MutableState<Boolean> {
     // Estado del Checkbox
@@ -476,10 +464,11 @@ fun CheckHold(): MutableState<Boolean> {
                 )
             )
         }
-        Space(8.dp)
+        //Space(8.dp)
         Text(
             text = stringResource(R.string.Name_CheckHolder),
-            fontSize = 15.sp
+            fontSize = 15.sp,
+            modifier = Modifier.padding(all = 8.dp)
         )
     }
 
@@ -527,179 +516,6 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
     )
 }
 
-@Composable
-fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewModel()) {
-    var selectedOption by remember { mutableStateOf("Personal") }
-    val options = listOf("Personal", "Vehicular", "Elemento", "Observations")
-    var reportes by remember { mutableStateOf(emptyList<Reporte>()) }
-    var idFiltro by remember { mutableStateOf("") }
-    var nombreFiltro by remember { mutableStateOf("") }
-    var tipoFiltro by remember { mutableStateOf(selectedOption) }
-    var fechaInicio by remember { mutableStateOf<Timestamp?>(null) }
-    var fechaFin by remember { mutableStateOf<Timestamp?>(null) }
-
-    // Actualizar los reportes cada vez que cambian los filtros
-    LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin) {
-        reportes = reporteViewModel.buscarReportes(
-            guardiaId = guardiaId,
-            id = idFiltro,
-            nombre = nombreFiltro,
-            tipo = tipoFiltro,
-            fechaInicio = fechaInicio,
-            fechaFin = fechaFin
-        )
-        println(idFiltro)
-    }
-
-    // Filtros de búsqueda
-    Column(modifier = Modifier.padding(10.dp)) {
-        // Filtro por Tipo
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-        ) {
-            var expandedTipo by remember { mutableStateOf(false) }
-            var selectedTipo by remember { mutableStateOf(tipoFiltro) }
-
-            ButtonApp(
-                text = "$selectedTipo",
-                iconButton = true,
-            ) {
-                expandedTipo = true
-            }
-
-            DropdownMenu(
-                expanded = expandedTipo,
-                onDismissRequest = { expandedTipo = false },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
-                options.forEach { tipo ->
-                    DropdownMenuItem(
-                        onClick = {
-                            selectedTipo = tipo
-                            tipoFiltro = tipo
-                            expandedTipo = false
-                        },
-                        text = { Text(text = tipo) }
-                    )
-                }
-            }
-        }
-
-        Space(12.dp)
-
-        CustomTextField(
-            value = idFiltro,
-            label = "ID del Usuario",
-            onValueChange = { idFiltro = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Space(12.dp)
-
-        CustomTextField(
-            value = nombreFiltro,
-            label = "Nombre del Usuario",
-            onValueChange = { nombreFiltro = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Space(12.dp)
-    }
-    // Mostrar los reportes filtrados
-    Space(20.dp)
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        PaginationScreen(reportes)
-    }
-}
-
-// Función para convertir milisegundos a una fecha legible
-fun formatDate(timestamp: Timestamp): String {
-    val date = timestamp.toDate()
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    return dateFormat.format(date)
-}
-
-@Composable
-fun Pagination(
-    totalPages: Int,
-    currentPage: Int,
-    onPageChanged: (Int) -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(2.dp, primary, shape = RoundedCornerShape(8.dp))
-            .background(primary)
-    ) {
-        CompositionLocalProvider(LocalContentColor provides background){
-            // Botón de "Previous"
-            TextButton(
-                onClick = {
-                    if (currentPage > 1) {
-                        onPageChanged(currentPage - 1)
-                    }
-                },
-                enabled = currentPage > 1
-            ) {
-                Text("Previous", color = if (currentPage > 1)  color_component else background)
-            }
-
-            // Números de páginas
-            for (page in 1..totalPages) {
-                TextButton(
-                    onClick = {
-                        onPageChanged(page)
-                    }
-                ) {
-                    Text(
-                        text = page.toString(),
-                        color = if (page == currentPage) background else color_component
-                    )
-                }
-            }
-
-            // Botón de "Next"
-            TextButton(
-                onClick = {
-                    if (currentPage < totalPages) {
-                        onPageChanged(currentPage + 1)
-                    }
-                },
-                enabled = currentPage < totalPages
-            ) {
-                Text("Next", color = if (currentPage < totalPages) color_component else background)
-            }
-        }
-
-    }
-}
-
-@Composable
-fun PaginationScreen(reportes: List<Reporte>) {
-    var currentPage by remember { mutableStateOf(1) }
-    val itemsPerPage = 10
-    val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
-
-    Column {
-        Pagination(
-            totalPages = totalPages,
-            currentPage = currentPage,
-            onPageChanged = { newPage -> currentPage = newPage }
-        )
-
-        Space(10.dp)
-        ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
-
-        Space(16.dp)
-    }
-}
 @Composable
 fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
     val startIndex = (currentPage - 1) * itemsPerPage
