@@ -10,7 +10,7 @@ import java.util.Locale
 fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<String, Any> {
     println("Creando parámetros para tipo: $tipo con datos: $datos")
     return when (tipo) {
-        "Observations" -> {
+        "Observacion" -> {
             mapOf(
                 "Subject" to (datos["Subject"] ?: ""),
                 "Observation" to (datos["Observation"] ?: ""),
@@ -52,7 +52,7 @@ fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<Stri
 @Composable
 fun MostrarReporte(reporte: Reporte,tipo: String) {
     val ordenParametros = when(tipo){
-        "Observations" -> listOf("Subject", "Observation", "Evidencias")
+        "Observacion" -> listOf("Subject", "Observation", "Evidencias")
         "Personal" -> listOf("Id_placa", "Name", "Destino", "Autorizacion", "Descripcion")
         "Vehicular" -> listOf("Id_placa", "Name", "Destino", "Autorizacion", "Descripcion")
         "Elemento" -> listOf("Imgelement", "Id_placa", "Name", "Destino", "Autorizacion", "Descripcion")
@@ -93,7 +93,7 @@ fun obtenerParametro(reporte: Reporte, clave: String): String {
 fun obtenerClavePorTipo(tipo: String): String {
     //println("TIPO De dato $tipo")
     return when (tipo) {
-        "Observations" -> "Subject"
+        "Observacion" -> "Subject"
         "Personal" -> "Id_placa"
         "Vehicular" -> "Id_placa"
         "Elemento" -> "Id_placa"

@@ -1,6 +1,7 @@
 package com.zonedev.minapp.ui.theme.Components
 
 
+import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,31 +27,6 @@ import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.theme.primary
 
-/**
-@Composable
-fun Template_Scan(IsScreenElement: Boolean=false,vals:String = stringResource(R.string.Value_Default_Label_Camera),guardiaId: String){
-
-    if (IsScreenElement){
-        //Camara de elementos
-        CaptureImageScreen(vals){
-            base64Image -> // Manejar la imagen capturada
-        }
-        //Camara de Identificacion
-        CaptureImageScreen(){
-            base64Image -> // Manejar la imagen capturada
-        }
-        //Componentes
-        Components_Template(guardiaId = guardiaId)
-    }else{
-        //Camara de Elementos
-        CaptureImageScreen(vals){
-            base64Image -> // Manejar la imagen capturada
-        }
-        //Componentes
-        Components_Template(guardiaId = guardiaId)
-    }
-}**/
-
 @Composable
 fun Template_Text(
     IsScreenElement: Boolean = false,
@@ -59,20 +35,22 @@ fun Template_Text(
     guardiaId: String
 ) {
     // Variables de los textfields
-    var Id by remember { mutableStateOf("") }
+    var id by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var evidenciasUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
 
-    /**if (IsScreenElement) {
-        CaptureImageScreen(stringResource(R.string.Value_Label_Element)) { base64Image ->
-            // Manejar la imagen capturada
-        }
-    }**/
+    if (IsScreenElement) {
+        Camera(
+            imageUri = evidenciasUri,
+            onImageCaptured = { uri -> evidenciasUri = uri },
+            label = "Elemento"
+        )
+    }
 
     CustomTextField(
-        value = Id,
+        value = id,
         label = Label_Id,
-        onValueChange = { Id = it },
-        isEnabled = true,
+        onValueChange = { id = it },
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
@@ -84,7 +62,6 @@ fun Template_Text(
         value = name,
         label = "Nombre",
         onValueChange = { name = it },
-        isEnabled = true,
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
@@ -93,21 +70,36 @@ fun Template_Text(
 
     Space(8.dp)
 
-    // Pasamos una lambda para resetear los valores de Id y name
-    Components_Template(Id, name, Tipo_Report, guardiaId) {
-        Id = ""
-        name = ""
+    // La lambda ahora recibe el estado del checkbox "Hold" para decidir si resetea id y name.
+    val onResetAction: (Boolean) -> Unit = { shouldHold ->
+        // La evidencia siempre se resetea.
+        evidenciasUri = Uri.EMPTY
+
+        if (IsScreenElement) {
+            // Si es la pantalla de elementos, solo reseteamos id y name si "Hold" está DESACTIVADO.
+            if (!shouldHold) {
+                id = ""
+                name = ""
+            }
+        } else {
+            // Para otras pantallas, siempre reseteamos id y name.
+            id = ""
+            name = ""
+        }
     }
+
+    Components_Template(id, name, Tipo_Report, evidenciasUri, guardiaId, onResetFields = onResetAction)
 }
 
 @Composable
 fun Components_Template(
-    Id: String = "",
-    name: String = "",
+    id: String,
+    name: String,
     tipo_report: String = "Elemento",
+    evidenciasUri: Uri?,
     guardiaId: String,
     reporteViewModel: ReporteViewModel = viewModel(),
-    onResetFields: (() -> Unit)? = null // Lambda para resetear los valores
+    onResetFields: (shouldHold: Boolean) -> Unit, // Lambda actualizada para pasar el estado de "Hold"
 ) {
     var destiny by remember { mutableStateOf("") }
     var auto by remember { mutableStateOf("") }
@@ -123,10 +115,19 @@ fun Components_Template(
 
     // El botón principal ahora contiene la lógica de validación.
     ButtonApp(stringResource(R.string.button_submit)) {
-        // --- LÓGICA DE VERIFICACIÓN ---
-        // Se comprueba que ningún campo esencial esté vacío antes de continuar.
-        val isFormValid = Id.isNotBlank() && name.isNotBlank() &&
-                destiny.isNotBlank() && auto.isNotBlank() && descrip.isNotBlank()
+        // --- LÓGICA DE VERIFICACIÓN ACTUALIZADA ---
+
+        // 1. Verificamos si la evidencia es válida. Es obligatoria solo para "Elemento".
+        val isEvidenceValid = if (tipo_report == "Elemento") {
+            evidenciasUri != null && evidenciasUri != Uri.EMPTY
+        } else {
+            true // La evidencia no es necesaria para otros tipos de reporte.
+        }
+
+        // 2. Verificamos el resto de los campos y la evidencia.
+        val isFormValid = id.isNotBlank() && name.isNotBlank() &&
+                destiny.isNotBlank() && auto.isNotBlank() && descrip.isNotBlank() &&
+                isEvidenceValid // Se añade la nueva condición.
 
         if (isFormValid) {
             // Si el formulario es válido, muestra el diálogo de confirmación.
@@ -139,14 +140,14 @@ fun Components_Template(
 
     Separator()
 
-    // --- DIÁLOGO DE CONFIRMACIÓN (SOLO SE MUESTRA SI LA VALIDACIÓN ES EXITOSA) ---
+    // --- DIÁLOGO DE CONFIRMACIÓN ---
     if (showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
             title = {
                 Text(
                     text = stringResource(R.string.Name_Modal_Report),
-                    color = colorResource(id=R.color.primary),
+                    color = colorResource(id = R.color.primary),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
@@ -164,13 +165,11 @@ fun Components_Template(
                 )
             },
             confirmButton = {
-                ButtonApp( // Usando Button de Material3 para consistencia
+                ButtonApp(
                     onClick = {
-                        // La lógica para crear el reporte se mantiene aquí,
-                        // ya que solo se ejecuta tras la confirmación del usuario.
                         val datos = if (tipo_report != "Elemento") {
                             mapOf(
-                                "Id_placa" to Id.lowercase(),
+                                "Id_placa" to id.lowercase(),
                                 "Name" to name.lowercase(),
                                 "Destino" to destiny.lowercase(),
                                 "Autorizacion" to auto.lowercase(),
@@ -178,8 +177,8 @@ fun Components_Template(
                             )
                         } else {
                             mapOf(
-                                "Imgelement" to "", // Considerar cómo se maneja la imagen
-                                "Id_placa" to Id.lowercase(),
+                                "Imgelement" to evidenciasUri.toString(),
+                                "Id_placa" to id.lowercase(),
                                 "Name" to name.lowercase(),
                                 "Destino" to destiny.lowercase(),
                                 "Autorizacion" to auto.lowercase(),
@@ -190,17 +189,23 @@ fun Components_Template(
                         val parametros = crearParametrosParaReporte(tipo_report, datos)
                         reporteViewModel.crearReporte(tipo_report, parametros, guardiaId)
 
-                        // Lógica para resetear los campos
-                        if (holdCheckState.value) {
-                            onResetFields?.invoke()
-                        } else {
+                        // --- LÓGICA DE RESETEO ACTUALIZADA ---
+
+                        // 1. Reseteamos los campos locales (destino, auto, descrip)
+                        //    solo si el CheckBox "Hold" no está activo.
+                        if (!holdCheckState.value) {
                             destiny = ""
                             auto = ""
                             descrip = ""
-                            onResetFields?.invoke()
                         }
+
+                        // 2. Invocamos la función del padre y le pasamos el estado de "Hold".
+                        //    El padre (`Template_Text`) se encargará de resetear (o no)
+                        //    los campos `id` y `name` según corresponda.
+                        onResetFields(holdCheckState.value)
+
                         showConfirmationDialog = false
-                    }, text = stringResource(id=R.string.Value_Button_Report)
+                    }, text = stringResource(id = R.string.Value_Button_Report)
                 )
             }
         )
@@ -210,27 +215,29 @@ fun Components_Template(
     if (showValidationErrorDialog) {
         AlertDialog(
             onDismissRequest = { showValidationErrorDialog = false },
-            title = { Text(
-                text="Campos Incompletos",
-                color= primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .fillMaxWidth(),
+            title = {
+                Text(
+                    text = "Campos Incompletos",
+                    color = primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .fillMaxWidth(),
                 )
                 Space(8.dp)
             },
 
-            text = { Text(
-                text="Por favor, asegúrese de llenar todos los campos antes de generar el reporte.",
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 6.dp))
+            text = {
+                Text(
+                    text = "Por favor, asegúrese de llenar todos los campos antes de generar el reporte. Para reportes de elementos, la evidencia es obligatoria.",
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 6.dp))
             },
             confirmButton = {
-                ButtonApp (
-                    text=stringResource(id=R.string.Value_Button_Report),
+                ButtonApp(
+                    text = stringResource(id = R.string.Value_Button_Report),
                     onClick = { showValidationErrorDialog = false }
                 )
             }

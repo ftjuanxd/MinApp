@@ -20,9 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zonedev.minapp.Camera
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
+import com.zonedev.minapp.ui.theme.Components.Camera
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.Components.crearParametrosParaReporte
@@ -37,12 +37,10 @@ fun Observations(guardiaId: String){
 fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel = viewModel()){
     var subject by remember { mutableStateOf("") }
     var observation by remember { mutableStateOf("") }
-    var tipo_report ="Observations"
+    var tipo_report ="Observacion"
     var showDialog by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var evidenciasUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
-
-    var evidencias by remember { mutableStateOf<Uri?>(null) }
 
     Camera(
         imageUri = evidenciasUri,
@@ -54,8 +52,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
         value = subject,
         label = stringResource(R.string.label_subject),
         onValueChange = { subject = it },
-        isEnabled = true,
-        KeyboardOptions.Default.copy(
+        keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
         )
@@ -64,8 +61,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
         value = observation,
         label = stringResource(R.string.label_observations),
         onValueChange = { observation = it },
-        isEnabled = true,
-        KeyboardOptions.Default.copy(
+        keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Done,
         ),
@@ -127,7 +123,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
                 showDialog = false
                 subject = ""
                 observation = ""
-                evidencias = Uri.EMPTY
+                evidenciasUri = Uri.EMPTY
                 message = "" // Limpia el mensaje al cerrar el diálogo
             },
             title = {
@@ -154,7 +150,7 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
                         showDialog = false
                         subject = ""
                         observation = ""
-                        evidencias = Uri.EMPTY
+                        evidenciasUri = Uri.EMPTY
                         message = "" // Limpia el mensaje al cerrar el diálogo
                     },
                 )
