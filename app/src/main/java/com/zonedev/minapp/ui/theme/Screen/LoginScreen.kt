@@ -33,7 +33,6 @@ import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.Components.Space
-import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
 import com.zonedev.minapp.ui.theme.color_component
@@ -104,7 +103,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
             label = stringResource(R.string.Label_name_Input_password),
             onValueChange = { password = it },
             isPasswordField = true,
-            iconTint =R.color.primary
+            iconTint =R.color.color_component
         )
 
         Space(16.dp)
@@ -164,31 +163,6 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
                     onClick = onDismiss,
                 )
             }
-        )
-    }
-}
-
-// Función Composable para el preview de Modal
-@Composable
-fun PreviewModalDialog() {
-    MinappTheme { // Envuelve tu componente con tu tema para que los colores y la tipografía se apliquen
-        Modal(
-            showDialog = true, // Establece showDialog a true para que el diálogo sea visible en el preview
-            onDismiss = { false },
-            errorMessage = "¡Ha ocurrido un error inesperado! Por favor, inténtalo de nuevo."
-        )
-    }
-}
-
-
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun PreviewModalDialogDark() {
-    MinappTheme(darkTheme = true) { // Fuerza el tema oscuro para este preview
-        Modal(
-            showDialog = true,
-            onDismiss = { /* No se necesita una implementación real para el preview */ },
-            errorMessage = "¡Ha ocurrido un error inesperado! Por favor, inténtalo de nuevo."
         )
     }
 }
