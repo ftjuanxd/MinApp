@@ -26,14 +26,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -72,7 +70,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.Model.Reporte
 import com.zonedev.minapp.ui.theme.Screen.Element
 import com.zonedev.minapp.ui.theme.Screen.Observations
 import com.zonedev.minapp.ui.theme.Screen.Personal
@@ -424,7 +421,7 @@ fun ButtonApp(
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
-        colors = ButtonDefaults.buttonColors(primary),
+        colors = ButtonDefaults.buttonColors(color_component),
         shape = RoundedCornerShape(12.dp)
     ) {
         Text(text = text, color = Color.White, fontSize = 18.sp)
@@ -514,66 +511,6 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
         ),
         pdHeight = 80.dp
     )
-}
-
-@Composable
-fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
-    val startIndex = (currentPage - 1) * itemsPerPage
-    val endIndex = minOf(startIndex + itemsPerPage, reportes.size)
-
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
-    ) {
-        for (index in startIndex until endIndex) {
-            val reporte = reportes[index]
-
-            // Obtener clave específica para este reporte
-            val clave = obtenerClavePorTipo(reporte.tipo)
-
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    selectedReporte = reporte
-                    showDialog = true
-                }
-            ) {
-                // Mostrar el valor específico de `parametros` según la clave
-                Text(
-                    text = obtenerParametro(reporte, clave),
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-        }
-    }
-
-    // Mostrar el modal solo si hay un reporte seleccionado
-    if (showDialog && selectedReporte != null) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(text = "Detalle del Reporte") },
-            text = {
-                selectedReporte?.let { reporte ->
-                    // Mostrar detalles del reporte seleccionado
-                    LazyColumn {
-                        item {
-                            MostrarReporte(reporte,reporte.tipo)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = "Aceptar",
-                    onClick = { showDialog = false }
-                )
-            }
-        )
-    }
 }
 
 @Composable

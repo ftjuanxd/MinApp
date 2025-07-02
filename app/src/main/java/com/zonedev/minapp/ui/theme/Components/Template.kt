@@ -147,7 +147,7 @@ fun Components_Template(
             title = {
                 Text(
                     text = stringResource(R.string.Name_Modal_Report),
-                    color = colorResource(id = R.color.primary),
+                    color = colorResource(id = R.color.color_component),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
@@ -170,7 +170,7 @@ fun Components_Template(
                         val datos = if (tipo_report != "Elemento") {
                             mapOf(
                                 "Id_placa" to id.lowercase(),
-                                "Name" to name.lowercase(),
+                                "Nombre" to name.lowercase(),
                                 "Destino" to destiny.lowercase(),
                                 "Autorizacion" to auto.lowercase(),
                                 "Descripcion" to descrip.lowercase()
@@ -179,7 +179,7 @@ fun Components_Template(
                             mapOf(
                                 "Imgelement" to evidenciasUri.toString(),
                                 "Id_placa" to id.lowercase(),
-                                "Name" to name.lowercase(),
+                                "Nombre" to name.lowercase(),
                                 "Destino" to destiny.lowercase(),
                                 "Autorizacion" to auto.lowercase(),
                                 "Descripcion" to descrip.lowercase()

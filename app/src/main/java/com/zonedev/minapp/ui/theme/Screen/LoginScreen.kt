@@ -36,7 +36,7 @@ import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
-import com.zonedev.minapp.ui.theme.primary
+import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.text
 
 @Composable
@@ -143,7 +143,7 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
             onDismissRequest = onDismiss,
             title = { Text(
                 text = "ERROR",
-                color= primary,
+                color= color_component,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 30.sp,
                 textAlign = TextAlign.Center,

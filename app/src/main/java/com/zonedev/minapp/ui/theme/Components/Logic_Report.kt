@@ -12,15 +12,15 @@ fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<Stri
     return when (tipo) {
         "Observacion" -> {
             mapOf(
-                "Subject" to (datos["Subject"] ?: ""),
-                "Observation" to (datos["Observation"] ?: ""),
+                "Titulo" to (datos["Titulo"] ?: ""),
+                "Observacion" to (datos["Observacion"] ?: ""),
                 "Evidencias" to (datos["Evidencias"] ?: "Ninguna"),
             )
         }
         "Personal" -> {
             mapOf(
                 "Id_placa" to (datos["Id_placa"] ?: ""),
-                "Name" to (datos["Name"] ?:""),
+                "Nombre" to (datos["Nombre"] ?:""),
                 "Destino" to (datos["Destino"] ?: ""),
                 "Autorizacion" to (datos["Autorizacion"]?: ""),
                 "Descripcion" to (datos["Descripcion"]?: "")
@@ -29,7 +29,7 @@ fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<Stri
         "Vehicular" -> {
             mapOf(
                 "Id_placa" to (datos["Id_placa"] ?: ""),
-                "Name" to (datos["Name"] ?:""),
+                "Nombre" to (datos["Nombre"] ?:""),
                 "Destino" to (datos["Destino"] ?: ""),
                 "Autorizacion" to (datos["Autorizacion"]?: ""),
                 "Descripcion" to (datos["Descripcion"]?: "")
@@ -39,7 +39,7 @@ fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<Stri
             mapOf(
                 "Imgelement" to (datos["Imgelement"] ?: ""),
                 "Id_placa" to (datos["Id_placa"] ?: ""),
-                "Name" to (datos["Name"] ?:""),
+                "Nombre" to (datos["Nombre"] ?:""),
                 "Destino" to (datos["Destino"] ?: ""),
                 "Autorizacion" to (datos["Autorizacion"]?: ""),
                 "Descripcion" to (datos["Descripcion"]?: "")
@@ -52,10 +52,10 @@ fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<Stri
 @Composable
 fun MostrarReporte(reporte: Reporte,tipo: String) {
     val ordenParametros = when(tipo){
-        "Observacion" -> listOf("Subject", "Observation", "Evidencias")
-        "Personal" -> listOf("Id_placa", "Name", "Destino", "Autorizacion", "Descripcion")
-        "Vehicular" -> listOf("Id_placa", "Name", "Destino", "Autorizacion", "Descripcion")
-        "Elemento" -> listOf("Imgelement", "Id_placa", "Name", "Destino", "Autorizacion", "Descripcion")
+        "Observacion" -> listOf("Titulo", "Observacion", "Evidencias")
+        "Personal" -> listOf("Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
+        "Vehicular" -> listOf("Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
+        "Elemento" -> listOf("Imgelement", "Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
         else -> listOf()
     }
 
@@ -93,7 +93,7 @@ fun obtenerParametro(reporte: Reporte, clave: String): String {
 fun obtenerClavePorTipo(tipo: String): String {
     //println("TIPO De dato $tipo")
     return when (tipo) {
-        "Observacion" -> "Subject"
+        "Observacion" -> "Titulo"
         "Personal" -> "Id_placa"
         "Vehicular" -> "Id_placa"
         "Elemento" -> "Id_placa"

@@ -2,15 +2,19 @@ package com.zonedev.minapp.ui.theme.Components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -19,9 +23,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -32,17 +37,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
+import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Model.Reporte
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.primary
+import com.zonedev.minapp.ui.theme.text
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 
 @Composable
@@ -56,7 +67,16 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
     var fechaInicio by remember { mutableStateOf<Timestamp?>(null) }
     var fechaFin by remember { mutableStateOf<Timestamp?>(null) }
 
-    // Actualizar los reportes cada vez que cambian los filtros
+    // Este efecto se ejecutará cada vez que el tipo de reporte cambie.
+    LaunchedEffect(tipoFiltro) {
+        // Resetea los otros filtros a su estado inicial.
+        idFiltro = ""
+        nombreFiltro = ""
+        fechaInicio = null
+        fechaFin = null
+    }
+
+    // Este efecto dispara la búsqueda cuando cualquier filtro cambia.
     LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin) {
         reportes = reporteViewModel.buscarReportes(
             guardiaId = guardiaId,
@@ -66,20 +86,20 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             fechaInicio = fechaInicio,
             fechaFin = fechaFin
         )
-        println(idFiltro)
     }
 
     // Filtros de búsqueda
     Column(modifier = Modifier.padding(10.dp)) {
         // Filtro por Tipo
         Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
         ) {
             var expandedTipo by remember { mutableStateOf(false) }
-            var selectedTipo by remember { mutableStateOf(tipoFiltro) }
 
             ButtonApp(
-                text = "$selectedTipo",
+                text = tipoFiltro,
                 iconButton = true,
             ) {
                 expandedTipo = true
@@ -95,7 +115,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 options.forEach { tipo ->
                     DropdownMenuItem(
                         onClick = {
-                            selectedTipo = tipo
+                            // Solo actualiza el tipo. El LaunchedEffect se encargará de resetear.
                             tipoFiltro = tipo
                             expandedTipo = false
                         },
@@ -105,28 +125,73 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             }
         }
 
-        Space(12.dp)
+        Space()
 
-        CustomTextField(
-            value = idFiltro,
-            label = "ID del Usuario",
-            onValueChange = { idFiltro = it },
-            modifier = Modifier.fillMaxWidth()
+        // --- LÓGICA DE UI CONDICIONAL REFACTORIZADA ---
+        when (tipoFiltro) {
+            "Observacion" -> {
+                // Para Observaciones, solo mostramos un campo para buscar por título.
+                // Usamos la variable 'nombreFiltro' para almacenar el título.
+                CustomTextField(
+                    value = nombreFiltro,
+                    label = "Título de Observación",
+                    onValueChange = { nombreFiltro = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            "Vehicular" -> {
+                // Para Vehicular, mostramos campos para Placa y Nombre.
+                CustomTextField(
+                    value = idFiltro,
+                    label = "Placa del Vehículo",
+                    onValueChange = { idFiltro = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Space()
+                CustomTextField(
+                    value = nombreFiltro,
+                    label = "Nombre del Usuario",
+                    onValueChange = { nombreFiltro = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            "Personal", "Elemento" -> {
+                // Para Personal y Elemento, mostramos campos para ID y Nombre.
+                CustomTextField(
+                    value = idFiltro,
+                    label = "ID del Usuario",
+                    onValueChange = { idFiltro = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Space()
+                CustomTextField(
+                    value = nombreFiltro,
+                    label = "Nombre del Usuario",
+                    onValueChange = { nombreFiltro = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Space()
+
+        ModernDatePickerTextField(
+            label = "Fecha de Inicio",
+            selectedDate = fechaInicio,
+            onDateSelected = { fechaInicio = it },
+            onDateCleared = { fechaInicio = null } // Proporciona la lógica para limpiar
         )
+        Space()
 
-        Space(12.dp)
-
-        CustomTextField(
-            value = nombreFiltro,
-            label = "Nombre del Usuario",
-            onValueChange = { nombreFiltro = it },
-            modifier = Modifier.fillMaxWidth()
+        ModernDatePickerTextField(
+            label = "Fecha de Fin",
+            selectedDate = fechaFin,
+            onDateSelected = { fechaFin = it },
+            onDateCleared = { fechaFin = null } // Proporciona la lógica para limpiar
         )
-
-        Space(12.dp)
     }
     // Mostrar los reportes filtrados
-    Space(20.dp)
+    Space(12.dp)
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -134,7 +199,6 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
         PaginationScreen(reportes)
     }
 }
-
 
 @Composable
 fun Pagination(
@@ -199,19 +263,103 @@ fun PaginationScreen(reportes: List<Reporte>) {
     val itemsPerPage = 10
     val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
 
+    // Reinicia la página actual si se vuelve inválida después de filtrar
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages
+    } else if (totalPages == 0) {
+        currentPage = 1
+    }
+
     Column {
-        Pagination(
-            totalPages = totalPages,
-            currentPage = currentPage,
-            onPageChanged = { newPage -> currentPage = newPage }
-        )
+        // Muestra los controles de paginación solo si hay reportes para paginar.
+        if (totalPages > 0) {
+            Pagination(
+                totalPages = totalPages,
+                currentPage = currentPage,
+                onPageChanged = { newPage -> currentPage = newPage }
+            )
+        }
 
         Space(10.dp)
+        // ContentForPage ahora maneja el mensaje de estado vacío.
         ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
 
         Space(16.dp)
     }
 }
+
+@Composable
+fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
+    val startIndex = (currentPage - 1) * itemsPerPage
+    val endIndex = minOf(startIndex + itemsPerPage, reportes.size)
+
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
+    ) {
+        // --- INICIO DE LA MODIFICACIÓN ---
+        if (reportes.isEmpty()) {
+            // Si la lista está vacía, muestra el mensaje.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No se encontró ningún reporte relacionado",
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            // Si la lista tiene reportes, muestra los elementos.
+            for (index in startIndex until endIndex) {
+                val reporte = reportes[index]
+                val clave = obtenerClavePorTipo(reporte.tipo)
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        selectedReporte = reporte
+                        showDialog = true
+                    }
+                ) {
+                    Text(
+                        text = obtenerParametro(reporte, clave),
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    // El modal de detalles no cambia y funciona igual.
+    if (showDialog && selectedReporte != null) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "Detalle del Reporte") },
+            text = {
+                selectedReporte?.let { reporte ->
+                    LazyColumn {
+                        item {
+                            MostrarReporte(reporte, reporte.tipo)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                ButtonApp(
+                    text = "Aceptar",
+                    onClick = { showDialog = false }
+                )
+            }
+        )
+    }
+}
+
 
 // Función para formatear la fecha a "dd/MM/yyyy"
 
@@ -219,9 +367,13 @@ private fun formatDate(timestamp: Timestamp?): String {
     return timestamp?.toDate()?.let { date ->
         // Define el formato deseado para la fecha
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        // Establece la zona horaria a UTC para mostrar la fecha correctamente
+        sdf.timeZone = TimeZone.getTimeZone("UTC")
         sdf.format(date)
     } ?: ""
 }
+
+// Filtro de Fecha
 
 // Filtro de Fecha
 
@@ -231,72 +383,83 @@ fun ModernDatePickerTextField(
     label: String,
     selectedDate: Timestamp?,
     onDateSelected: (Timestamp) -> Unit,
+    onDateCleared: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Estado para controlar la visibilidad del diálogo del selector de fecha
     var showDialog by remember { mutableStateOf(false) }
-
-    // El texto que se mostrará en el TextField, formateado a partir de la fecha seleccionada
     val formattedDate = formatDate(selectedDate)
 
-    // Componente OutlinedTextField que actúa como un botón para abrir el selector de fecha
-    OutlinedTextField(
+    // Se utiliza TextField en lugar de OutlinedTextField para que coincida con CustomTextField
+    TextField(
         value = formattedDate,
-        onValueChange = { /* No se permite la edición manual, el valor se actualiza con el selector */ },
-        modifier = modifier.fillMaxWidth(), // Asegura que el campo de texto ocupe todo el ancho disponible
-        label = { Text(label) },
-        readOnly = true, // Impide que el usuario escriba directamente en el campo
+        onValueChange = {},
+        label = { Text(text = label, color = color_component) }, // Se aplica el color de la etiqueta
+        readOnly = true,
+        enabled = true,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp) // Se añade padding para consistencia
+            .border(2.dp, primary, RoundedCornerShape(12.dp)) // Se aplica el mismo borde
+            .clickable { showDialog = true }, // El campo completo es clickeable
         trailingIcon = {
-            // Icono de calendario que al hacer clic abre el selector de fecha
-            IconButton(onClick = { showDialog = true }) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = "Seleccionar fecha" // Descripción para accesibilidad
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (selectedDate != null) {
+                    IconButton(onClick = onDateCleared) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Limpiar fecha",
+                            tint = colorResource(id= R.color.color_component)
+                        )
+                    }
+                }
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Seleccionar fecha",
+                        tint = colorResource(id= R.color.color_component)
+
+                    )
+                }
             }
-        }
+        },
+        // Se aplican los mismos colores que en CustomTextField para un look unificado
+        colors = TextFieldDefaults.textFieldColors(
+            disabledIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            containerColor = background,
+            unfocusedTextColor = text,
+            focusedTextColor = text
+        )
     )
 
-    // Si showDialog es true, se muestra el DatePickerDialog
     if (showDialog) {
-        // Estado del selector de fecha, inicializado con la fecha seleccionada o la fecha actual
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate?.toDate()?.time ?: System.currentTimeMillis()
         )
 
-        // Diálogo del selector de fecha
         DatePickerDialog(
-            onDismissRequest = { showDialog = false }, // Cierra el diálogo al hacer clic fuera o presionar atrás
+            onDismissRequest = { showDialog = false },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        // Solo si el usuario ha seleccionado una fecha (no es nula)
                         datePickerState.selectedDateMillis?.let { millis ->
-                            // Convertimos los milisegundos a un objeto Calendar
-                            val calendar = Calendar.getInstance().apply {
-                                timeInMillis = millis
-                                // Aseguramos que la hora sea el inicio del día (00:00:00)
-                                set(Calendar.HOUR_OF_DAY, 0)
-                                set(Calendar.MINUTE, 0)
-                                set(Calendar.SECOND, 0)
-                                set(Calendar.MILLISECOND, 0)
-                            }
-                            // Invocamos el callback con el nuevo Timestamp de Firebase
+                            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                            calendar.timeInMillis = millis
                             onDateSelected(Timestamp(calendar.time))
                         }
-                        showDialog = false // Cierra el diálogo después de la selección
+                        showDialog = false
                     }
                 ) {
-                    Text("Aceptar") // Texto del botón de confirmación
+                    Text("Aceptar")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancelar") // Texto del botón de cancelación
+                    Text("Cancelar")
                 }
             }
         ) {
-            // El componente DatePicker real dentro del diálogo
             DatePicker(state = datePickerState)
         }
     }
