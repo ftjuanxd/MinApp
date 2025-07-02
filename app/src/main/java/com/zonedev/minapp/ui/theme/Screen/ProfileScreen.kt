@@ -2,6 +2,7 @@ package com.zonedev.minapp.ui.theme.Screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -32,7 +33,7 @@ import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
-import com.zonedev.minapp.ui.theme.primary
+import com.zonedev.minapp.ui.theme.color_component
 
 @Composable
 fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
@@ -128,11 +129,13 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
             },
             title = { Text(
                 text = stringResource(R.string.Name_Modal_Download),
-                color = primary,
+                color = color_component,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
             ) },
             text = { Text(text = stringResource(R.string.Content_Modal_Download)) },
             confirmButton = {

@@ -75,8 +75,8 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
             message = "Error"
         }else {
             val datos = mapOf(
-                "Subject" to subject.lowercase(),
-                "Observation" to observation.lowercase(),
+                "Titulo" to subject.lowercase(),
+                "Observacion" to observation.lowercase(),
                 "Evidencias" to evidenciasUri.toString()
             )
 
