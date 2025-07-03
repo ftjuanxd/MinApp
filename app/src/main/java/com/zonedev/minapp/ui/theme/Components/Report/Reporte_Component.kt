@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Components
+package com.zonedev.minapp.ui.theme.Components.Report
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,6 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.zonedev.minapp.R
+import com.zonedev.minapp.ui.theme.Components.ButtonApp
+import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.Model.Reporte
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.theme.background
@@ -55,6 +58,77 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+@Composable
+fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
+    val startIndex = (currentPage - 1) * itemsPerPage
+    val endIndex = minOf(startIndex + itemsPerPage, reportes.size)
+
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
+    ) {
+        // --- INICIO DE LA MODIFICACIÓN ---
+        if (reportes.isEmpty()) {
+            // Si la lista está vacía, muestra el mensaje.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No se encontró ningún reporte relacionado",
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            // Si la lista tiene reportes, muestra los elementos.
+            for (index in startIndex until endIndex) {
+                val reporte = reportes[index]
+                val clave = obtenerClavePorTipo(reporte.tipo)
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        selectedReporte = reporte
+                        showDialog = true
+                    }
+                ) {
+                    Text(
+                        text = obtenerParametro(reporte, clave),
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    // El modal de detalles no cambia y funciona igual.
+    if (showDialog && selectedReporte != null) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "Detalle del Reporte") },
+            text = {
+                selectedReporte?.let { reporte ->
+                    LazyColumn {
+                        item {
+                            MostrarReporte(reporte, reporte.tipo)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                ButtonApp(
+                    text = "Aceptar",
+                    onClick = { showDialog = false }
+                )
+            }
+        )
+    }
+}
 
 @Composable
 fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewModel()) {
@@ -200,169 +274,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
     }
 }
 
-@Composable
-fun Pagination(
-    totalPages: Int,
-    currentPage: Int,
-    onPageChanged: (Int) -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(2.dp, primary, shape = RoundedCornerShape(8.dp))
-            .background(primary)
-    ) {
-        CompositionLocalProvider(LocalContentColor provides background){
-            // Botón de "Previous"
-            TextButton(
-                onClick = {
-                    if (currentPage > 1) {
-                        onPageChanged(currentPage - 1)
-                    }
-                },
-                enabled = currentPage > 1
-            ) {
-                Text("Previous", color = if (currentPage > 1)  color_component else background)
-            }
-
-            // Números de páginas
-            for (page in 1..totalPages) {
-                TextButton(
-                    onClick = {
-                        onPageChanged(page)
-                    }
-                ) {
-                    Text(
-                        text = page.toString(),
-                        color = if (page == currentPage) background else color_component
-                    )
-                }
-            }
-
-            // Botón de "Next"
-            TextButton(
-                onClick = {
-                    if (currentPage < totalPages) {
-                        onPageChanged(currentPage + 1)
-                    }
-                },
-                enabled = currentPage < totalPages
-            ) {
-                Text("Next", color = if (currentPage < totalPages) color_component else background)
-            }
-        }
-
-    }
-}
-
-@Composable
-fun PaginationScreen(reportes: List<Reporte>) {
-    var currentPage by remember { mutableStateOf(1) }
-    val itemsPerPage = 10
-    val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
-
-    // Reinicia la página actual si se vuelve inválida después de filtrar
-    if (currentPage > totalPages && totalPages > 0) {
-        currentPage = totalPages
-    } else if (totalPages == 0) {
-        currentPage = 1
-    }
-
-    Column {
-        // Muestra los controles de paginación solo si hay reportes para paginar.
-        if (totalPages > 0) {
-            Pagination(
-                totalPages = totalPages,
-                currentPage = currentPage,
-                onPageChanged = { newPage -> currentPage = newPage }
-            )
-        }
-
-        Space(10.dp)
-        // ContentForPage ahora maneja el mensaje de estado vacío.
-        ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
-
-        Space(16.dp)
-    }
-}
-
-@Composable
-fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
-    val startIndex = (currentPage - 1) * itemsPerPage
-    val endIndex = minOf(startIndex + itemsPerPage, reportes.size)
-
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
-    ) {
-        // --- INICIO DE LA MODIFICACIÓN ---
-        if (reportes.isEmpty()) {
-            // Si la lista está vacía, muestra el mensaje.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No se encontró ningún reporte relacionado",
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else {
-            // Si la lista tiene reportes, muestra los elementos.
-            for (index in startIndex until endIndex) {
-                val reporte = reportes[index]
-                val clave = obtenerClavePorTipo(reporte.tipo)
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        selectedReporte = reporte
-                        showDialog = true
-                    }
-                ) {
-                    Text(
-                        text = obtenerParametro(reporte, clave),
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-            }
-        }
-    }
-
-    // El modal de detalles no cambia y funciona igual.
-    if (showDialog && selectedReporte != null) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(text = "Detalle del Reporte") },
-            text = {
-                selectedReporte?.let { reporte ->
-                    LazyColumn {
-                        item {
-                            MostrarReporte(reporte, reporte.tipo)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = "Aceptar",
-                    onClick = { showDialog = false }
-                )
-            }
-        )
-    }
-}
-
-
 // Función para formatear la fecha a "dd/MM/yyyy"
-
 private fun formatDate(timestamp: Timestamp?): String {
     return timestamp?.toDate()?.let { date ->
         // Define el formato deseado para la fecha
@@ -372,10 +284,6 @@ private fun formatDate(timestamp: Timestamp?): String {
         sdf.format(date)
     } ?: ""
 }
-
-// Filtro de Fecha
-
-// Filtro de Fecha
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -462,5 +370,93 @@ fun ModernDatePickerTextField(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+}
+
+@Composable
+fun Pagination(
+    totalPages: Int,
+    currentPage: Int,
+    onPageChanged: (Int) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, primary, shape = RoundedCornerShape(8.dp))
+            .background(primary)
+    ) {
+        CompositionLocalProvider(LocalContentColor provides background){
+            // Botón de "Previous"
+            TextButton(
+                onClick = {
+                    if (currentPage > 1) {
+                        onPageChanged(currentPage - 1)
+                    }
+                },
+                enabled = currentPage > 1
+            ) {
+                Text("Previous", color = if (currentPage > 1)  color_component else background)
+            }
+
+            // Números de páginas
+            for (page in 1..totalPages) {
+                TextButton(
+                    onClick = {
+                        onPageChanged(page)
+                    }
+                ) {
+                    Text(
+                        text = page.toString(),
+                        color = if (page == currentPage) background else color_component
+                    )
+                }
+            }
+
+            // Botón de "Next"
+            TextButton(
+                onClick = {
+                    if (currentPage < totalPages) {
+                        onPageChanged(currentPage + 1)
+                    }
+                },
+                enabled = currentPage < totalPages
+            ) {
+                Text("Next", color = if (currentPage < totalPages) color_component else background)
+            }
+        }
+
+    }
+}
+
+@Composable
+fun PaginationScreen(reportes: List<Reporte>) {
+    var currentPage by remember { mutableStateOf(1) }
+    val itemsPerPage = 10
+    val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
+
+    // Reinicia la página actual si se vuelve inválida después de filtrar
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages
+    } else if (totalPages == 0) {
+        currentPage = 1
+    }
+
+    Column {
+        // Muestra los controles de paginación solo si hay reportes para paginar.
+        if (totalPages > 0) {
+            Pagination(
+                totalPages = totalPages,
+                currentPage = currentPage,
+                onPageChanged = { newPage -> currentPage = newPage }
+            )
+        }
+
+        Space(10.dp)
+        // ContentForPage ahora maneja el mensaje de estado vacío.
+        ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
+
+        Space(16.dp)
     }
 }

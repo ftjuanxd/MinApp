@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Components
+package com.zonedev.minapp.ui.theme.Components.Report
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -36,6 +36,106 @@ import coil.request.ImageRequest
 import com.zonedev.minapp.ui.theme.Model.Reporte
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<String, Any> {
+    println("Creando parámetros para tipo: $tipo con datos: $datos")
+    return when (tipo) {
+        "Observacion" -> {
+            mapOf(
+                "Titulo" to (datos["Titulo"] ?: ""),
+                "Observacion" to (datos["Observacion"] ?: ""),
+                "Evidencias" to (datos["Evidencias"] ?: "Ninguna"),
+            )
+        }
+        "Personal" -> {
+            mapOf(
+                "Id_placa" to (datos["Id_placa"] ?: ""),
+                "Nombre" to (datos["Nombre"] ?:""),
+                "Destino" to (datos["Destino"] ?: ""),
+                "Autorizacion" to (datos["Autorizacion"]?: ""),
+                "Descripcion" to (datos["Descripcion"]?: "")
+            )
+        }
+        "Vehicular" -> {
+            mapOf(
+                "Id_placa" to (datos["Id_placa"] ?: ""),
+                "Nombre" to (datos["Nombre"] ?:""),
+                "Destino" to (datos["Destino"] ?: ""),
+                "Autorizacion" to (datos["Autorizacion"]?: ""),
+                "Descripcion" to (datos["Descripcion"]?: "")
+            )
+        }
+        "Elemento" -> {
+            mapOf(
+                "Imgelement" to (datos["Imgelement"] ?: ""),
+                "Id_placa" to (datos["Id_placa"] ?: ""),
+                "Nombre" to (datos["Nombre"] ?:""),
+                "Destino" to (datos["Destino"] ?: ""),
+                "Autorizacion" to (datos["Autorizacion"]?: ""),
+                "Descripcion" to (datos["Descripcion"]?: "")
+            )
+        }
+        else -> emptyMap() // Manejo de casos de tipos desconocidos
+    }
+}
+
+fun formatearFecha(timestamp: Long): String {
+    val sdf = SimpleDateFormat("EEE, d MMM yyyy - h:mm a", Locale.getDefault())
+    return sdf.format(timestamp)
+}
+
+@Composable
+fun FullScreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false // Clave para que el diálogo ocupe toda la pantalla.
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.85f))
+                .clickable { onDismiss() }, // Permite cerrar tocando en cualquier lugar
+            contentAlignment = Alignment.Center
+        ) {
+            // La imagen a pantalla completa.
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(Uri.parse(imageUrl))
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Imagen en pantalla completa",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit // 'Fit' asegura que toda la imagen sea visible
+            ) {
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                    else -> {
+                        SubcomposeAsyncImageContent()
+                    }
+                }
+            }
+
+            // Un botón para cerrar en la esquina superior derecha.
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cerrar",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun MostrarReporte(reporte: Reporte, tipo: String) {
@@ -116,71 +216,6 @@ fun MostrarReporte(reporte: Reporte, tipo: String) {
     }
 }
 
-@Composable
-fun FullScreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false // Clave para que el diálogo ocupe toda la pantalla.
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.85f))
-                .clickable { onDismiss() }, // Permite cerrar tocando en cualquier lugar
-            contentAlignment = Alignment.Center
-        ) {
-            // La imagen a pantalla completa.
-            SubcomposeAsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(Uri.parse(imageUrl))
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "Imagen en pantalla completa",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit // 'Fit' asegura que toda la imagen sea visible
-            ) {
-                when (painter.state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-                    else -> {
-                        SubcomposeAsyncImageContent()
-                    }
-                }
-            }
-
-            // Un botón para cerrar en la esquina superior derecha.
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Cerrar",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-    }
-}
-
-
-// El resto del archivo permanece igual.
-fun formatearFecha(timestamp: Long): String {
-    val sdf = SimpleDateFormat("EEE, d MMM yyyy - h:mm a", Locale.getDefault())
-    return sdf.format(timestamp)
-}
-
-fun obtenerParametro(reporte: Reporte, clave: String): String {
-    val parametro = reporte.parametros[clave]
-    return parametro?.toString() ?: "Parámetro no encontrado"
-}
-
 fun obtenerClavePorTipo(tipo: String): String {
     return when (tipo) {
         "Observacion" -> "Titulo"
@@ -191,44 +226,8 @@ fun obtenerClavePorTipo(tipo: String): String {
     }
 }
 
-fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<String, Any> {
-    println("Creando parámetros para tipo: $tipo con datos: $datos")
-    return when (tipo) {
-        "Observacion" -> {
-            mapOf(
-                "Titulo" to (datos["Titulo"] ?: ""),
-                "Observacion" to (datos["Observacion"] ?: ""),
-                "Evidencias" to (datos["Evidencias"] ?: "Ninguna"),
-            )
-        }
-        "Personal" -> {
-            mapOf(
-                "Id_placa" to (datos["Id_placa"] ?: ""),
-                "Nombre" to (datos["Nombre"] ?:""),
-                "Destino" to (datos["Destino"] ?: ""),
-                "Autorizacion" to (datos["Autorizacion"]?: ""),
-                "Descripcion" to (datos["Descripcion"]?: "")
-            )
-        }
-        "Vehicular" -> {
-            mapOf(
-                "Id_placa" to (datos["Id_placa"] ?: ""),
-                "Nombre" to (datos["Nombre"] ?:""),
-                "Destino" to (datos["Destino"] ?: ""),
-                "Autorizacion" to (datos["Autorizacion"]?: ""),
-                "Descripcion" to (datos["Descripcion"]?: "")
-            )
-        }
-        "Elemento" -> {
-            mapOf(
-                "Imgelement" to (datos["Imgelement"] ?: ""),
-                "Id_placa" to (datos["Id_placa"] ?: ""),
-                "Nombre" to (datos["Nombre"] ?:""),
-                "Destino" to (datos["Destino"] ?: ""),
-                "Autorizacion" to (datos["Autorizacion"]?: ""),
-                "Descripcion" to (datos["Descripcion"]?: "")
-            )
-        }
-        else -> emptyMap() // Manejo de casos de tipos desconocidos
-    }
+
+fun obtenerParametro(reporte: Reporte, clave: String): String {
+    val parametro = reporte.parametros[clave]
+    return parametro?.toString() ?: "Parámetro no encontrado"
 }

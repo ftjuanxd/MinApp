@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Screen
+package com.zonedev.minapp.ui.theme.Screen.Guardia
 
 import android.net.Uri
 import androidx.compose.foundation.layout.padding
@@ -25,7 +25,7 @@ import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.Camera
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.Components.Separator
-import com.zonedev.minapp.ui.theme.Components.crearParametrosParaReporte
+import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.theme.primary
 
