@@ -1,201 +1,159 @@
 package com.zonedev.minapp.ui.theme.Templates
 
 import android.net.Uri
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.Camera
 import com.zonedev.minapp.ui.theme.Components.CheckHold
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
-import com.zonedev.minapp.ui.theme.primary
 
 @Composable
 fun Components_Template(
     id: String,
     name: String,
-    tipo_report: String = "Elemento",
+    tipo_report: String = stringResource(R.string.Name_Minuta_Ele),
     evidenciasUri: Uri?,
     guardiaId: String,
     reporteViewModel: ReporteViewModel = viewModel(),
-    onResetFields: (shouldHold: Boolean) -> Unit, // Lambda actualizada para pasar el estado de "Hold"
+    onResetFields: (shouldHold: Boolean) -> Unit,
 ) {
     var destiny by remember { mutableStateOf("") }
     var auto by remember { mutableStateOf("") }
     var descrip by remember { mutableStateOf("") }
 
-    // Estados para controlar la visibilidad de los diálogos
+    // Estado para el diálogo de confirmación de envío
     var showConfirmationDialog by remember { mutableStateOf(false) }
+
+    // --- CAMBIO: Estados unificados para todos los errores de validación ---
     var showValidationErrorDialog by remember { mutableStateOf(false) }
+    var validationErrorTitle by remember { mutableStateOf(0) }
+    var validationErrorMessage by remember { mutableStateOf(0) }
 
     val holdCheckState = CheckHold()
 
     FieldsThemes(destiny, { destiny = it }, auto, { auto = it }, descrip, { descrip = it })
 
-    // El botón principal ahora contiene la lógica de validación.
     ButtonApp(stringResource(R.string.button_submit)) {
-        // --- LÓGICA DE VERIFICACIÓN ACTUALIZADA ---
+        // --- CAMBIO: Lógica de validación centralizada ---
+        val isEvidenceValid = if (tipo_report == "Elemento") evidenciasUri != null && evidenciasUri != Uri.EMPTY else true
 
-        // 1. Verificamos si la evidencia es válida. Es obligatoria solo para "Elemento".
-        val isEvidenceValid = if (tipo_report == "Elemento") {
-            evidenciasUri != null && evidenciasUri != Uri.EMPTY
-        } else {
-            true // La evidencia no es necesaria para otros tipos de reporte.
-        }
+        when {
+            // 1. Validar campos vacíos
+            id.isBlank() || name.isBlank() || destiny.isBlank() || auto.isBlank() || descrip.isBlank() -> {
+                validationErrorTitle = R.string.Campos_Incompletos
+                validationErrorMessage = R.string.Mensaje_Por_Campos_Vacios
+                showValidationErrorDialog = true
+            }
+            // 2. Validar que la evidencia (si es necesaria) no esté vacía
+            !isEvidenceValid -> {
+                validationErrorTitle = R.string.Error_Validacion_Titulo // Necesitas este String
+                validationErrorMessage = R.string.Error_Falta_Evidencia // Necesitas este String
+                showValidationErrorDialog = true
+            }
+            // 3. Validar tipo de dato para ID
+            !id.all { it.isDigit() } -> {
+                validationErrorTitle = R.string.Error_Validacion_Titulo
+                validationErrorMessage = R.string.Error_ID_Debe_Ser_Numero // Necesitas este String
+                showValidationErrorDialog = true
+            }
+            // 4. Validar tipo de dato para campos de texto
+            !name.all { it.isLetter() || it.isWhitespace() } ||
+                    !destiny.all { it.isLetter() || it.isWhitespace() } ||
+                    !auto.all { it.isLetter() || it.isWhitespace() } -> {
+                validationErrorTitle = R.string.Error_Validacion_Titulo
+                validationErrorMessage = R.string.Error_Campos_Debe_Ser_Texto // Necesitas este String
+                showValidationErrorDialog = true
+            }
+            // Si todo es correcto
+            else -> {
+                showConfirmationDialog = true
+                val datos = if (tipo_report != "Elemento") {
+                    mapOf(
+                        "Id_placa" to id.lowercase(),
+                        "Nombre" to name.lowercase(),
+                        "Destino" to destiny.lowercase(),
+                        "Autorizacion" to auto.lowercase(),
+                        "Descripcion" to descrip.lowercase()
+                    )
+                } else {
+                    mapOf(
+                        "Imgelement" to evidenciasUri.toString(),
+                        "Id_placa" to id.lowercase(),
+                        "Nombre" to name.lowercase(),
+                        "Destino" to destiny.lowercase(),
+                        "Autorizacion" to auto.lowercase(),
+                        "Descripcion" to descrip.lowercase()
+                    )
+                }
+                val parametros = crearParametrosParaReporte(tipo_report, datos)
+                reporteViewModel.crearReporte(tipo_report, parametros, guardiaId)
 
-        // 2. Verificamos el resto de los campos y la evidencia.
-        val isFormValid = id.isNotBlank() && name.isNotBlank() &&
-                destiny.isNotBlank() && auto.isNotBlank() && descrip.isNotBlank() &&
-                isEvidenceValid // Se añade la nueva condición.
-
-        if (isFormValid) {
-            // Si el formulario es válido, muestra el diálogo de confirmación.
-            showConfirmationDialog = true
-        } else {
-            // Si es inválido, muestra un diálogo de error.
-            showValidationErrorDialog = true
+                if (!holdCheckState.value) {
+                    destiny = ""
+                    auto = ""
+                    descrip = ""
+                }
+                onResetFields(holdCheckState.value)
+            }
         }
     }
 
     Separator()
 
-    // --- DIÁLOGO DE CONFIRMACIÓN ---
+    // Diálogo de confirmación (cuando todo está bien)
     if (showConfirmationDialog) {
-        AlertDialog(
-            onDismissRequest = { showConfirmationDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.Name_Modal_Report),
-                    color = colorResource(id = R.color.color_component),
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(bottom = 16.dp)
-                        .fillMaxWidth()
-                )
-                Space(8.dp)
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.Content_Modal_Report),
-                    color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            },
-            confirmButton = {
-                ButtonApp(
-                    onClick = {
-                        val datos = if (tipo_report != "Elemento") {
-                            mapOf(
-                                "Id_placa" to id.lowercase(),
-                                "Nombre" to name.lowercase(),
-                                "Destino" to destiny.lowercase(),
-                                "Autorizacion" to auto.lowercase(),
-                                "Descripcion" to descrip.lowercase()
-                            )
-                        } else {
-                            mapOf(
-                                "Imgelement" to evidenciasUri.toString(),
-                                "Id_placa" to id.lowercase(),
-                                "Nombre" to name.lowercase(),
-                                "Destino" to destiny.lowercase(),
-                                "Autorizacion" to auto.lowercase(),
-                                "Descripcion" to descrip.lowercase()
-                            )
-                        }
-
-                        val parametros = crearParametrosParaReporte(tipo_report, datos)
-                        reporteViewModel.crearReporte(tipo_report, parametros, guardiaId)
-
-                        // --- LÓGICA DE RESETEO ACTUALIZADA ---
-
-                        // 1. Reseteamos los campos locales (destino, auto, descrip)
-                        //    solo si el CheckBox "Hold" no está activo.
-                        if (!holdCheckState.value) {
-                            destiny = ""
-                            auto = ""
-                            descrip = ""
-                        }
-
-                        // 2. Invocamos la función del padre y le pasamos el estado de "Hold".
-                        //    El padre (`Template_Text`) se encargará de resetear (o no)
-                        //    los campos `id` y `name` según corresponda.
-                        onResetFields(holdCheckState.value)
-
-                        showConfirmationDialog = false
-                    }, text = stringResource(id = R.string.Value_Button_Report)
-                )
-            }
+        Modal(
+            showDialog = showConfirmationDialog,
+            onDismiss = { showConfirmationDialog = false },
+            title = R.string.Name_Modal_Report,
+            Message = R.string.Content_Modal_Report,
+            onClick = { showConfirmationDialog = false }
         )
     }
 
-    // --- DIÁLOGO DE ERROR DE VALIDACIÓN ---
+    // Modal unificado para todos los errores de validación ---
     if (showValidationErrorDialog) {
-        AlertDialog(
-            onDismissRequest = { showValidationErrorDialog = false },
-            title = {
-                Text(
-                    text = "Campos Incompletos",
-                    color = primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(bottom = 16.dp)
-                        .fillMaxWidth(),
-                )
-                Space(8.dp)
-            },
-
-            text = {
-                Text(
-                    text = "Por favor, asegúrese de llenar todos los campos antes de generar el reporte. Para reportes de elementos, la evidencia es obligatoria.",
-                    color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 6.dp))
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = stringResource(id = R.string.Value_Button_Report),
-                    onClick = { showValidationErrorDialog = false }
-                )
-            }
+        Modal(
+            showDialog = showValidationErrorDialog,
+            onDismiss = { showValidationErrorDialog = false },
+            title = validationErrorTitle,
+            Message = validationErrorMessage,
+            onClick = { showValidationErrorDialog = false }
         )
     }
 }
+
 
 @Composable
 fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,onAutoChange: (String) -> Unit,descrip:String,onDescripChange: (String) -> Unit){
 
     CustomTextField(
         value = destiny,
-        label = "Destino",
-        onValueChange = onDestinyChange,
+        label = stringResource(R.string.Label_Destino_Report),
+        onValueChange = { newValue ->
+            // Solo permite letras y espacios en el campo de destino
+            if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                onDestinyChange(newValue)
+            }
+        },
         isEnabled = true,
-        KeyboardOptions.Default.copy(
+        keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
         )
@@ -204,10 +162,15 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
     //TextField Authorization
     CustomTextField(
         value = auto,
-        label = "Autorizacion",
-        onValueChange = onAutoChange,
+        label = stringResource(R.string.Label_Autorizacion_Report),
+        onValueChange = { newValue ->
+            // Solo permite letras y espacios en el campo de autorización
+            if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                onAutoChange(newValue)
+            }
+        },
         isEnabled = true,
-        KeyboardOptions.Default.copy(
+        keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
         )
@@ -216,8 +179,8 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
     //TextField Description
     CustomTextField(
         value = descrip,
-        label = "Descripcion",
-        onValueChange = onDescripChange,
+        label = stringResource(R.string.Label_Descripcion_Report),
+        onValueChange = onDescripChange, // Para descripción, permitimos cualquier caracter
         isEnabled = true,
         KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
@@ -231,11 +194,11 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
 fun Template_Text(
     IsScreenElement: Boolean = false,
     Label_Id: String = stringResource(R.string.Value_Default_Label_Id),
-    Tipo_Report: String = "Elemento",
+    Tipo_Report: String = stringResource(R.string.Name_Minuta_Ele),
     guardiaId: String
 ) {
-    // Variables de los textfields
-    var id by remember { mutableStateOf("") }
+    // --- CAMBIO: El estado de 'id' ahora es Int? (nullable Int) ---
+    var id by remember { mutableStateOf<Long?>(null) }
     var name by remember { mutableStateOf("") }
     var evidenciasUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
 
@@ -243,50 +206,60 @@ fun Template_Text(
         Camera(
             imageUri = evidenciasUri,
             onImageCaptured = { uri -> evidenciasUri = uri },
-            label = "Elemento"
+            label = stringResource(R.string.Name_Minuta_Ele)
         )
     }
 
     CustomTextField(
-        value = id,
+        // --- CAMBIO: Mostramos el 'id' como String, o vacío si es nulo ---
+        value = id?.toString() ?: "",
         label = Label_Id,
-        onValueChange = { id = it },
+        onValueChange = { newString ->
+            // Filtramos para asegurarnos que solo sean dígitos
+            val filteredString = newString.filter { it.isDigit() }
+            // --- CAMBIO: Convertimos el string a Int?, o nulo si está vacío ---
+            id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
+        },
         keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Text,
+            keyboardType = KeyboardType.Number,
             imeAction = ImeAction.Next,
         )
     )
-    Space(8.dp)
+    Space()
 
     CustomTextField(
         value = name,
-        label = "Nombre",
-        onValueChange = { name = it },
+        label = stringResource(R.string.Label_Nombre_Report),
+        onValueChange = { newValue ->
+            // Solo permite letras y espacios en el campo de nombre
+            if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                name = newValue
+            }
+        },
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
         )
     )
 
-    Space(8.dp)
+    Space()
 
-    // La lambda ahora recibe el estado del checkbox "Hold" para decidir si resetea id y name.
     val onResetAction: (Boolean) -> Unit = { shouldHold ->
-        // La evidencia siempre se resetea.
         evidenciasUri = Uri.EMPTY
 
         if (IsScreenElement) {
-            // Si es la pantalla de elementos, solo reseteamos id y name si "Hold" está DESACTIVADO.
             if (!shouldHold) {
-                id = ""
+                // --- CAMBIO: Reseteamos 'id' a null ---
+                id = null
                 name = ""
             }
         } else {
-            // Para otras pantallas, siempre reseteamos id y name.
-            id = ""
+            // --- CAMBIO: Reseteamos 'id' a null ---
+            id = null
             name = ""
         }
     }
 
-    Components_Template(id, name, Tipo_Report, evidenciasUri, guardiaId, onResetFields = onResetAction)
+    // --- CAMBIO: Pasamos el 'id' como String a Components_Template ---
+    Components_Template(id?.toString() ?: "", name, Tipo_Report, evidenciasUri, guardiaId, onResetFields = onResetAction)
 }

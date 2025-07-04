@@ -128,7 +128,12 @@ fun BaseScreen(
                 navController,
                 previousPage = previousPage
             )
-            Space(50.dp)
+            if (opcClic == "rep"){
+                Space(8.dp)
+            }else{
+                Space(20.dp)
+            }
+
             Column(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.Top,

@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,26 +25,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
-import com.zonedev.minapp.ui.theme.color_component
-import com.zonedev.minapp.ui.theme.text
 
 @Composable
-fun LoginApp(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
+fun LoginApp(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(background)
     ) {
         BlobUi()
-        CustomLoginScreen(navController, auth, onLoginSuccess)
+        CustomLoginScreen(auth, onLoginSuccess)
     }
 }
 @Preview
@@ -75,11 +71,11 @@ fun BlobUi() {
 }
 
 @Composable
-fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
+fun CustomLoginScreen(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") } // Variable para el mensaje de error
+    var errorMessage: Int by remember { mutableStateOf(0) } // Variable para el mensaje de error
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(
@@ -111,7 +107,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
         ButtonApp(stringResource(R.string.name_button_login)) {
             if (email.isBlank() || password.isBlank()) {
                 // Muestra un mensaje de error si los campos están vacíos
-                errorMessage = "Ingrese el correo electrónico como la contraseña."
+                errorMessage = R.string.Campos_Vacios_Login
                 showDialog = true
             } else {
                 // Realiza la autenticación si ambos campos tienen valores
@@ -121,7 +117,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
                             onLoginSuccess(user.uid) // Pasa el userId de vuelta al MainActivity
                         }
                     } else {
-                        errorMessage = "Los datos de usuario son incorrectos. Por favor, inténtalo de nuevo."
+                        errorMessage = R.string.Parametros_Incorrectos_Login
                         showDialog = true
                         email = ""
                         password = ""
@@ -131,38 +127,6 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
         }
 
         // Muestra el modal si showDialog es verdadero
-        Modal(showDialog = showDialog, onDismiss = { showDialog = false }, errorMessage = errorMessage)
-    }
-}
-
-@Composable
-fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(
-                text = "ERROR",
-                color= color_component,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 30.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .fillMaxWidth(),
-                )
-            },
-            text = { Text(
-                text = errorMessage,
-                color = text,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 6.dp))
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = stringResource(R.string.Value_Button_Report),
-                    onClick = onDismiss,
-                )
-            }
-        )
+        Modal(showDialog, { showDialog = false }, R.string.Title_Error, errorMessage, onClick = { showDialog = false })
     }
 }

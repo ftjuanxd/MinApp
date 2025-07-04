@@ -1,27 +1,65 @@
 <resources>
+    <!--Strings Error-->
     <string name="app_name">MinApp</string>
+    <string name="Title_Error">Error</string>
+    <string name="Mensaje_Error">Ocurrió un error. Por favor, inténtalo de nuevo.</string>
+    <string name="Error_Validacion_Titulo">Error de Formato</string>
+    <string name="Error_Falta_Evidencia">El Campo de Evidencia es Obligatorio</string>
+    <string name="Error_ID_Debe_Ser_Numero">El ID debe ser un número</string>
+    <string name="Error_Campos_Debe_Ser_Texto">Los campos de texto deben contener solo letras y espacios</string>
+
+
+    <!--Login Screen-->
     <string name="blob_ui_text">BIENVENIDO</string>
     <string name="input_login_name_email">Correo</string>
     <string name="input_login_placeholder_email">Minapp@gmail.com</string>
     <string name="input_login_name_password">Contraseña</string>
     <string name="input_login_placeholder_password">********</string>
     <string name="name_button_login">Ingresar</string>
-    <string name="lema_app">El Complemento de la Seguridad</string>
+    <string name="Label_name_input_user">Correo</string>
+    <string name="Label_name_Input_password">Contraseña</string>
+    <string name="Campos_Vacios_Login">Los Campos de Correo Electronico y Contraseña son obligatorios. Por favor, completa ambos campos.</string>
+    <string name="Parametros_Incorrectos_Login">Los datos de usuario son incorrectos. Por favor, inténtalo de nuevo.</string>
+    <!--Profile Screen-->
     <string name="Descripcion_profileScreen_Image">Imagen de perfil</string>
+    <string name="Error_Image">Error loading image</string>
+    <string name="Dato_No_Obtenido">Dato No obtenido</string>
     <string name="Text_profileScreen_Button">Manual</string>
     <string name="Descripcion_Navbar_Icon_Power">Cerrar Sesión</string>
     <string name="Descripcion_Navbar_Icon_Profile_Screen">MENU</string>
     <string name="Description_name_Input_user">Usuario</string>
     <string name="Description_name_Input_password">Contraseña</string>
-    <string name="Label_name_input_user">Correo</string>
-    <string name="Label_name_Input_password">Contraseña</string>
+    <string name="Name_Modal_Download">DESCARGAR</string>
+    <string name="Content_Modal_Download">El Manual fue Descargado</string>
+    <string name="Label_Name_Profile">Name</string>
+    <string name="Label_Phone_Profile">Phone</string>
+    <string name="Label_ID_Profile">N° Id</string>
+    <string name="Label_Rh_Profile">Rh</string>
+
+    <!--Minutas-->
+    <string name="Type_Report_Element">Elemento</string>
+    <string name="button_submit">Reportar</string>
+    <string name="Campos_Incompletos">Campos Incompletos</string>
+    <string name="Mensaje_Por_Campos_Vacios">El reporte realizdo tiene campos en blanco.</string>
+    <string name="Label_Destino_Report">Destino</string>
+    <string name="Label_Autorizacion_Report">Autorizacion</string>
+    <string name="Label_Descripcion_Report">Descripcion</string>
+    <string name="Label_Nombre_Report">Nombre</string>
+    <string name="Name_CheckHolder">Mantener Valores</string>
+    <string name="Name_Modal_Report">REPORTADO</string>
+    <string name="Content_Modal_Report">El Reporte fue realizado</string>
+    <string name="Value_Button_Report">CERRAR</string>
+
+    <!--Interfaz Observation-->
+
     <string name="Name_Interfaz_Observations">OBSERVACIONES</string>
     <string name="label_subject">Titulo</string>
     <string name="label_observations">Observaciones</string>
-    <string name="button_submit">Reportar</string>
     <string name="Section_Upload_Files">Cargar Archivos</string>
     <string name="Label_Upload_Files">Evidencias</string>
-    <string name="Name_CheckHolder">Mantener Valores</string>
+
+    <!--Interfaz Reportes -->
+
     <string name="Name_Interfaz_Pedestrian_Access">PERSONAL</string>
     <string name="Name_Interfaz_Vehicular">VEHICULAR</string>
     <string name="Name_Interfaz_Element">ELEMENTO</string>
@@ -29,16 +67,24 @@
     <string name="Value_Default_Label_Id">Id</string>
     <string name="Value_Label_Vehicular">Placa</string>
     <string name="Name_Interfaz_Report">REPORTES</string>
-    <string name="Name_Modal_Report">REPORTADO</string>
-    <string name="Content_Modal_Report">El Reporte fue realizado</string>
-    <string name="Value_Button_Report">CERRAR</string>
-    <string name="Name_Modal_Download">DESCARGAR</string>
-    <string name="Content_Modal_Download">El Manual fue Descargado</string>
-    <string name="Label_Value_Central">Central</string>
-    <string name="Label_Value_Employ">Carlos</string>
+    <string name="Titulo_Modal_Reporte">Detalle del Reporte</string>
     <string name="Name_Minuta_Per">Personal</string>
     <string name="Name_Minuta_Veh">Vehicular</string>
     <string name="Name_Minuta_Ele">Elemento</string>
-    <string name="Name_Minuta_Obs">Observations</string>
-    <string name="Title_Error">Error</string>
+    <string name="Name_Minuta_Obs">Observacion</string>
+    <string name="Mensaje_Reporte_No_Encontrado">No se encontró ningún reporte relacionado</string>
+    <string name="Label_Filtro_Obs_Report">Título de Observación</string>
+    <string name="Label_Filtro_Veh_Report">Placa del Vehículo</string>
+    <string name="Label_Filtro_User_Name_Report">Nombre del Usuario</string>
+    <string name="Label_Filtro_User_ID_Report">ID del Usuario</string>
+    <string name="Label_Filtro_Fecha_Inicio_Report">Fecha de Inicio</string>
+    <string name="Label_Filtro_Fecha_Fin_Report">Fecha de Fin</string>
+    <string name="Clean_Filter_Fecha">Limpiar fecha</string>
+    <string name="Select_Filter_Fecha">Seleccionar fecha</string>
+    <string name="Value_Button_Date_Ok">Aceptar</string>
+    <string name="Value_Button_Date_No">Cancelar</string>
+    <string name="Value_Pagination_Previo">Previo</string>
+    <string name="Value_Pagination_Siguiente">Siguiente</string>
+
+
 </resources>

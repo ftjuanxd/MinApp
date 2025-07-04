@@ -39,8 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.zonedev.minapp.R
@@ -71,7 +74,6 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
             .fillMaxWidth()
             .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
     ) {
-        // --- INICIO DE LA MODIFICACIÓN ---
         if (reportes.isEmpty()) {
             // Si la lista está vacía, muestra el mensaje.
             Box(
@@ -81,7 +83,7 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No se encontró ningún reporte relacionado",
+                    text = stringResource(R.string.Mensaje_Reporte_No_Encontrado),
                     textAlign = TextAlign.Center
                 )
             }
@@ -110,7 +112,16 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
     if (showDialog && selectedReporte != null) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(text = "Detalle del Reporte") },
+            title = { Text(
+                text = stringResource(R.string.Titulo_Modal_Reporte),
+                color= color_component,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 30.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+            ) },
             text = {
                 selectedReporte?.let { reporte ->
                     LazyColumn {
@@ -122,7 +133,7 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
             },
             confirmButton = {
                 ButtonApp(
-                    text = "Aceptar",
+                    text = stringResource(R.string.Value_Button_Report),
                     onClick = { showDialog = false }
                 )
             }
@@ -208,7 +219,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 // Usamos la variable 'nombreFiltro' para almacenar el título.
                 CustomTextField(
                     value = nombreFiltro,
-                    label = "Título de Observación",
+                    label = stringResource(R.string.Label_Filtro_Obs_Report),
                     onValueChange = { nombreFiltro = it },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -217,14 +228,14 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 // Para Vehicular, mostramos campos para Placa y Nombre.
                 CustomTextField(
                     value = idFiltro,
-                    label = "Placa del Vehículo",
+                    label = stringResource(R.string.Label_Filtro_Veh_Report),
                     onValueChange = { idFiltro = it },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Space()
                 CustomTextField(
                     value = nombreFiltro,
-                    label = "Nombre del Usuario",
+                    label = stringResource(R.string.Label_Filtro_User_Name_Report),
                     onValueChange = { nombreFiltro = it },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -233,14 +244,14 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 // Para Personal y Elemento, mostramos campos para ID y Nombre.
                 CustomTextField(
                     value = idFiltro,
-                    label = "ID del Usuario",
+                    label = stringResource(R.string.Label_Filtro_User_ID_Report),
                     onValueChange = { idFiltro = it },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Space()
                 CustomTextField(
                     value = nombreFiltro,
-                    label = "Nombre del Usuario",
+                    label = stringResource(R.string.Label_Filtro_User_Name_Report),
                     onValueChange = { nombreFiltro = it },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -250,7 +261,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
         Space()
 
         ModernDatePickerTextField(
-            label = "Fecha de Inicio",
+            label = stringResource(R.string.Label_Filtro_Fecha_Inicio_Report),
             selectedDate = fechaInicio,
             onDateSelected = { fechaInicio = it },
             onDateCleared = { fechaInicio = null } // Proporciona la lógica para limpiar
@@ -258,7 +269,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
         Space()
 
         ModernDatePickerTextField(
-            label = "Fecha de Fin",
+            label = stringResource(R.string.Label_Filtro_Fecha_Fin_Report),
             selectedDate = fechaFin,
             onDateSelected = { fechaFin = it },
             onDateCleared = { fechaFin = null } // Proporciona la lógica para limpiar
@@ -315,7 +326,7 @@ fun ModernDatePickerTextField(
                     IconButton(onClick = onDateCleared) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = "Limpiar fecha",
+                            contentDescription = stringResource(R.string.Clean_Filter_Fecha),
                             tint = colorResource(id= R.color.color_component)
                         )
                     }
@@ -323,7 +334,7 @@ fun ModernDatePickerTextField(
                 IconButton(onClick = { showDialog = true }) {
                     Icon(
                         imageVector = Icons.Default.DateRange,
-                        contentDescription = "Seleccionar fecha",
+                        contentDescription = stringResource(R.string.Select_Filter_Fecha),
                         tint = colorResource(id= R.color.color_component)
 
                     )
@@ -359,12 +370,12 @@ fun ModernDatePickerTextField(
                         showDialog = false
                     }
                 ) {
-                    Text("Aceptar")
+                    Text(stringResource(R.string.Value_Button_Date_Ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.Value_Button_Date_No))
                 }
             }
         ) {
@@ -384,12 +395,12 @@ fun Pagination(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .border(2.dp, primary, shape = RoundedCornerShape(8.dp))
-            .background(primary)
+            .background(color_component)
     ) {
         CompositionLocalProvider(LocalContentColor provides background){
             // Botón de "Previous"
             TextButton(
+                modifier = Modifier.padding(2.dp),
                 onClick = {
                     if (currentPage > 1) {
                         onPageChanged(currentPage - 1)
@@ -397,12 +408,13 @@ fun Pagination(
                 },
                 enabled = currentPage > 1
             ) {
-                Text("Previous", color = if (currentPage > 1)  color_component else background)
+                Text(stringResource(R.string.Value_Pagination_Previo), color = if (currentPage > 1)  color_component else background)
             }
 
             // Números de páginas
             for (page in 1..totalPages) {
                 TextButton(
+                    modifier = Modifier.padding(2.dp),
                     onClick = {
                         onPageChanged(page)
                     }
@@ -416,6 +428,7 @@ fun Pagination(
 
             // Botón de "Next"
             TextButton(
+                modifier = Modifier.padding(2.dp),
                 onClick = {
                     if (currentPage < totalPages) {
                         onPageChanged(currentPage + 1)
@@ -423,7 +436,7 @@ fun Pagination(
                 },
                 enabled = currentPage < totalPages
             ) {
-                Text("Next", color = if (currentPage < totalPages) color_component else background)
+                Text(stringResource(R.string.Value_Pagination_Siguiente), color = if (currentPage < totalPages) color_component else background)
             }
         }
 

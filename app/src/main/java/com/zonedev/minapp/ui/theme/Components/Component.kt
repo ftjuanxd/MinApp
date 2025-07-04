@@ -3,6 +3,7 @@ package com.zonedev.minapp.ui.theme.Components
 
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -42,10 +44,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,13 +96,13 @@ fun CheckHold(): MutableState<Boolean> {
     // Contenedor con el Checkbox y un Text para mostrar el estado
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(end = 220.dp)
+        modifier = Modifier.padding(end = 190.dp)
     ) {
         Box(
             modifier = Modifier
                 .size(23.dp)  // Tamaño del checkbox
                 .border(2.dp, primary, RoundedCornerShape(4.dp))  // Borde personalizado
-                .padding(4.dp)  // Espacio entre el borde y el checkbox
+                .padding(1.dp)  // Espacio entre el borde y el checkbox
         ) {
             Checkbox(
                 checked = isChecked.value,
@@ -110,15 +114,12 @@ fun CheckHold(): MutableState<Boolean> {
                 )
             )
         }
-        //Space(8.dp)
         Text(
             text = stringResource(R.string.Name_CheckHolder),
             fontSize = 15.sp,
             modifier = Modifier.padding(all = 8.dp)
         )
     }
-
-    // Retornar el estado observable de isChecked
     return isChecked
 }
 
@@ -209,6 +210,36 @@ fun CustomTextField(
 }
 
 // Create Modal
+@Composable
+fun Modal(showDialog: Boolean, onDismiss: () -> Unit,  @StringRes title: Int, @StringRes Message: Int, @StringRes textButton: Int = R.string.Value_Button_Report, onClick: () -> Unit) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(
+                text = stringResource(title),
+                color= color_component,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 30.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),)
+            },
+            text = { Text(
+                text = stringResource(Message),
+                color = text,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 6.dp))
+            },
+            confirmButton = {
+                ButtonApp(
+                    text = stringResource(textButton),
+                    onClick = onClick,
+                )
+            }
+        )
+    }
+}
 
 @Composable
 fun Separator() {

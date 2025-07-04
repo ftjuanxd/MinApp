@@ -1,33 +1,25 @@
 package com.zonedev.minapp.ui.theme.Screen.Guardia
 
 import android.net.Uri
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.Camera
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.Separator
+import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
+import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
-import com.zonedev.minapp.ui.theme.primary
 
 @Composable
 fun Observations(guardiaId: String){
@@ -37,7 +29,7 @@ fun Observations(guardiaId: String){
 fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel = viewModel()){
     var subject by remember { mutableStateOf("") }
     var observation by remember { mutableStateOf("") }
-    var tipo_report ="Observacion"
+    var tipo_report =stringResource(R.string.Name_Minuta_Obs)
     var showDialog by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var evidenciasUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
@@ -86,6 +78,9 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
             showDialog = true
             message = "Correcto"
         }
+        subject = ""
+        observation = ""
+        evidenciasUri = Uri.EMPTY
     }
     Separator()
 
@@ -93,68 +88,27 @@ fun Components_Observations(guardiaId: String,reporteViewModel: ReporteViewModel
 
     if (showDialog) {
         // Variables para el contenido dinámico del diálogo
-        val dialogTitle: String
-        val dialogContent: String
-        val confirmButtonText: String
+        var dialogTitle: Int =0
+        var dialogContent: Int=0
 
-        // Determina el contenido del diálogo basado en el valor de 'message'
         when (message) {
             "Error" -> {
-                dialogTitle = "Error" // Define en strings.xml
-                dialogContent = "El reporte realizdo tiene campos en blanco" // Define en strings.xml
-                confirmButtonText = stringResource(R.string.Value_Button_Report) // Reutiliza o define uno nuevo
+                dialogTitle = R.string.Title_Error
+                dialogContent =R.string.Mensaje_Por_Campos_Vacios
             }
             "Correcto" -> {
-                dialogTitle = stringResource(R.string.Name_Modal_Report)
-                dialogContent = stringResource(R.string.Content_Modal_Report)// Define en strings.xml
-                confirmButtonText = stringResource(R.string.Value_Button_Report)
-            }
-            // Puedes añadir más casos si tienes otros tipos de mensajes o errores
-            else -> {
-                // Caso por defecto o para otros mensajes que no estén mapeados
-                dialogTitle = stringResource(R.string.Name_Modal_Report)
-                dialogContent = stringResource(R.string.Content_Modal_Report)
-                confirmButtonText = stringResource(R.string.Value_Button_Report)
+                dialogTitle = R.string.Name_Modal_Report
+                dialogContent = R.string.Content_Modal_Report
             }
         }
-
-        AlertDialog(
-            onDismissRequest = {
+        Modal(
+            showDialog,
+            {
                 showDialog = false
-                subject = ""
-                observation = ""
-                evidenciasUri = Uri.EMPTY
-                message = "" // Limpia el mensaje al cerrar el diálogo
+                message=""
             },
-            title = {
-                Text(
-                    text = dialogTitle, // Usa el título dinámico
-                    color = primary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            },
-            text = {
-                Text(
-                    text = dialogContent, // Usa el contenido dinámico
-                    color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = confirmButtonText, // Usa el texto del botón dinámico
-                    onClick = {
-                        showDialog = false
-                        subject = ""
-                        observation = ""
-                        evidenciasUri = Uri.EMPTY
-                        message = "" // Limpia el mensaje al cerrar el diálogo
-                    },
-                )
-            }
+            dialogTitle, dialogContent, onClick = {showDialog = false}
         )
+
     }
 }
