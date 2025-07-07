@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +25,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -107,6 +110,10 @@ fun CustomLoginScreen(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
             value = email,
             label = stringResource(R.string.Label_name_input_user),
             onValueChange = { if (it.length <= 254) email = it },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            )
         )
 
         Space(16.dp)
@@ -116,7 +123,11 @@ fun CustomLoginScreen(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
             label = stringResource(R.string.Label_name_Input_password),
             onValueChange = { password = it },
             isPasswordField = true,
-            iconTint =R.color.color_component
+            iconTint =R.color.color_component,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            )
         )
 
         Space(16.dp)

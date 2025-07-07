@@ -173,7 +173,7 @@ fun CustomTextField(
                 onClick?.invoke()
             },
         visualTransformation = if (isPasswordField && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = if (isPasswordField) KeyboardOptions(keyboardType = KeyboardType.Password) else keyboardOptions,
+        keyboardOptions = keyboardOptions,
         trailingIcon = {
             if (isPasswordField)
             {
