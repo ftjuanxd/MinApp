@@ -119,7 +119,7 @@ fun Components_Template(
                         Toast.makeText(context, "Error al enviar: ${exception.message}", Toast.LENGTH_LONG).show()
                     }
 
-                    // --- CAMBIO: Decidimos qué función del ViewModel llamar ---
+                    // --- Decidimos qué función del ViewModel llamar ---
                     if (tipo_report == "Elemento" && evidenciasUri != null && evidenciasUri != Uri.EMPTY) {
                         // Si hay imagen, llamamos a la función que sube el archivo
                         reporteViewModel.subirImagenYCrearReporte(
@@ -242,13 +242,13 @@ fun Template_Text(
     }
 
     CustomTextField(
-        // --- CAMBIO: Mostramos el 'id' como String, o vacío si es nulo ---
+        // --- Mostramos el 'id' como String, o vacío si es nulo ---
         value = id?.toString() ?: "",
         label = Label_Id,
         onValueChange = { newString ->
             // Filtramos para asegurarnos que solo sean dígitos
             val filteredString = newString.filter { it.isDigit() }
-            // --- CAMBIO: Convertimos el string a Int?, o nulo si está vacío ---
+            // --- Convertimos el string a Int?, o nulo si está vacío ---
             id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
         },
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -291,6 +291,6 @@ fun Template_Text(
         }
     }
 
-    // --- CAMBIO: Pasamos el 'id' como String a Components_Template ---
+    // --- Pasamos el 'id' como String a Components_Template ---
     Components_Template(id?.toString() ?: "", name, Tipo_Report, evidenciasUri, guardiaId, onResetFields = onResetAction)
 }

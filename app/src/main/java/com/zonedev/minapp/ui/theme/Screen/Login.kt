@@ -1,13 +1,16 @@
 package com.zonedev.minapp.ui.theme.Screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,27 +48,41 @@ fun LoginApp(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
         CustomLoginScreen(auth, onLoginSuccess)
     }
 }
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Preview
 @Composable
 fun BlobUi() {
     val blob = painterResource(R.drawable.blob)
-    Box(modifier = Modifier.fillMaxSize()) {
+
+    // 1. Usamos BoxWithConstraints para obtener las dimensiones de la pantalla.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // 'maxWidth' y 'maxHeight' ahora están disponibles para usarlos en los modificadores.
+
+        // 2. La imagen del blob se alinea en la esquina superior derecha.
+        //    Su tamaño y desplazamiento ahora son proporcionales al ancho de la pantalla,
+        //    lo que garantiza que se escale correctamente en cualquier dispositivo.
         Image(
             painter = blob,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
-            alignment = Alignment.TopEnd,
-            modifier = Modifier.absoluteOffset(x = (-60).dp, y = (-160).dp)
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(maxWidth * 3f) // Por ejemplo, el 90% del ancho de la pantalla
+                .offset(x = maxWidth * -0.24f, y = -(maxWidth * 0.86f)) // El desplazamiento también es proporcional
         )
+
+        // 3. El texto se alinea arriba a la izquierda y se posiciona con padding.
+        //    Los valores de padding son más seguros que los offsets para el espaciado interno.
         Text(
-            text = stringResource(R.string.blob_ui_text),
+            text = stringResource(R.string.blob_ui_text), // "BIENVENIDO"
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
-            fontSize = 37.sp    ,
+            fontSize = 37.sp,
             fontFamily = bodyFontFamily,
-            textAlign = TextAlign.Justify,
+            textAlign = TextAlign.Start, // Es mejor usar Start que Justify para textos cortos.
             modifier = Modifier
-                .absoluteOffset(x = 10.dp, y = 80.dp)
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 80.dp)
         )
     }
 }
