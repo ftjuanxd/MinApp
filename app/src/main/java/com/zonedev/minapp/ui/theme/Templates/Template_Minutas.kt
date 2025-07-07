@@ -1,12 +1,14 @@
 package com.zonedev.minapp.ui.theme.Templates
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -40,79 +42,108 @@ fun Components_Template(
     // Estado para el diálogo de confirmación de envío
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
-    // --- CAMBIO: Estados unificados para todos los errores de validación ---
+    // Estados unificados para todos los errores de validación ---
     var showValidationErrorDialog by remember { mutableStateOf(false) }
     var validationErrorTitle by remember { mutableStateOf(0) }
     var validationErrorMessage by remember { mutableStateOf(0) }
 
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val holdCheckState = CheckHold()
 
     FieldsThemes(destiny, { destiny = it }, auto, { auto = it }, descrip, { descrip = it })
 
-    ButtonApp(stringResource(R.string.button_submit)) {
-        // --- CAMBIO: Lógica de validación centralizada ---
-        val isEvidenceValid = if (tipo_report == "Elemento") evidenciasUri != null && evidenciasUri != Uri.EMPTY else true
+    ButtonApp(
+        // ---  El texto del botón cambia y se deshabilita si está cargando ---
+        text = if (isLoading) stringResource(R.string.enviando) else stringResource(R.string.button_submit),
+        isEnabled = !isLoading,
+        onClick = {
+            val isEvidenceValid = if (tipo_report == "Elemento") evidenciasUri != null && evidenciasUri != Uri.EMPTY else true
 
-        when {
-            // 1. Validar campos vacíos
-            id.isBlank() || name.isBlank() || destiny.isBlank() || auto.isBlank() || descrip.isBlank() -> {
-                validationErrorTitle = R.string.Campos_Incompletos
-                validationErrorMessage = R.string.Mensaje_Por_Campos_Vacios
-                showValidationErrorDialog = true
-            }
-            // 2. Validar que la evidencia (si es necesaria) no esté vacía
-            !isEvidenceValid -> {
-                validationErrorTitle = R.string.Error_Validacion_Titulo // Necesitas este String
-                validationErrorMessage = R.string.Error_Falta_Evidencia // Necesitas este String
-                showValidationErrorDialog = true
-            }
-            // 3. Validar tipo de dato para ID
-            !id.all { it.isDigit() } -> {
-                validationErrorTitle = R.string.Error_Validacion_Titulo
-                validationErrorMessage = R.string.Error_ID_Debe_Ser_Numero // Necesitas este String
-                showValidationErrorDialog = true
-            }
-            // 4. Validar tipo de dato para campos de texto
-            !name.all { it.isLetter() || it.isWhitespace() } ||
-                    !destiny.all { it.isLetter() || it.isWhitespace() } ||
-                    !auto.all { it.isLetter() || it.isWhitespace() } -> {
-                validationErrorTitle = R.string.Error_Validacion_Titulo
-                validationErrorMessage = R.string.Error_Campos_Debe_Ser_Texto // Necesitas este String
-                showValidationErrorDialog = true
-            }
-            // Si todo es correcto
-            else -> {
-                showConfirmationDialog = true
-                val datos = if (tipo_report != "Elemento") {
-                    mapOf(
+            when {
+                // 1. Validar campos vacíos
+                id.isBlank() || name.isBlank() || destiny.isBlank() || auto.isBlank() || descrip.isBlank() -> {
+                    validationErrorTitle = R.string.Campos_Incompletos
+                    validationErrorMessage = R.string.Mensaje_Por_Campos_Vacios
+                    showValidationErrorDialog = true
+                }
+                // 2. Validar que la evidencia (si es necesaria) no esté vacía
+                !isEvidenceValid -> {
+                    validationErrorTitle = R.string.Error_Validacion_Titulo // Necesitas este String
+                    validationErrorMessage = R.string.Error_Falta_Evidencia // Necesitas este String
+                    showValidationErrorDialog = true
+                }
+                // 3. Validar tipo de dato para ID
+                !id.all { it.isDigit() } -> {
+                    validationErrorTitle = R.string.Error_Validacion_Titulo
+                    validationErrorMessage = R.string.Error_ID_Debe_Ser_Numero // Necesitas este String
+                    showValidationErrorDialog = true
+                }
+                // 4. Validar tipo de dato para campos de texto
+                !name.all { it.isLetter() || it.isWhitespace() } ||
+                        !destiny.all { it.isLetter() || it.isWhitespace() } ||
+                        !auto.all { it.isLetter() || it.isWhitespace() } -> {
+                    validationErrorTitle = R.string.Error_Validacion_Titulo
+                    validationErrorMessage = R.string.Error_Campos_Debe_Ser_Texto // Necesitas este String
+                    showValidationErrorDialog = true
+                }
+                else -> {
+                    // --- CAMBIO: Inicia la carga ---
+                    isLoading = true
+
+                    // Preparamos los datos base que son comunes
+                    val datosBase = mapOf(
                         "Id_placa" to id.lowercase(),
                         "Nombre" to name.lowercase(),
                         "Destino" to destiny.lowercase(),
                         "Autorizacion" to auto.lowercase(),
                         "Descripcion" to descrip.lowercase()
                     )
-                } else {
-                    mapOf(
-                        "Imgelement" to evidenciasUri.toString(),
-                        "Id_placa" to id.lowercase(),
-                        "Nombre" to name.lowercase(),
-                        "Destino" to destiny.lowercase(),
-                        "Autorizacion" to auto.lowercase(),
-                        "Descripcion" to descrip.lowercase()
-                    )
-                }
-                val parametros = crearParametrosParaReporte(tipo_report, datos)
-                reporteViewModel.crearReporte(tipo_report, parametros, guardiaId)
+                    // Usamos la función externa para construir el mapa de parámetros
+                    val parametros = crearParametrosParaReporte(tipo_report, datosBase)
 
-                if (!holdCheckState.value) {
-                    destiny = ""
-                    auto = ""
-                    descrip = ""
+                    // Definimos los handlers para el resultado
+                    val onSuccessHandler = {
+                        isLoading = false
+                        showConfirmationDialog = true
+                        if (!holdCheckState.value) {
+                            destiny = ""
+                            auto = ""
+                            descrip = ""
+                        }
+                        onResetFields(holdCheckState.value)
+                    }
+
+                    val onFailureHandler: (Exception) -> Unit = { exception ->
+                        isLoading = false
+                        Toast.makeText(context, "Error al enviar: ${exception.message}", Toast.LENGTH_LONG).show()
+                    }
+
+                    // --- CAMBIO: Decidimos qué función del ViewModel llamar ---
+                    if (tipo_report == "Elemento" && evidenciasUri != null && evidenciasUri != Uri.EMPTY) {
+                        // Si hay imagen, llamamos a la función que sube el archivo
+                        reporteViewModel.subirImagenYCrearReporte(
+                            uriLocal = evidenciasUri,
+                            tipo = tipo_report,
+                            parametros = parametros,
+                            guardiaId = guardiaId,
+                            onSuccess = onSuccessHandler,
+                            onFailure = onFailureHandler
+                        )
+                    } else {
+                        // Si no hay imagen, llamamos a la función original
+                        reporteViewModel.crearReporte(
+                            tipo = tipo_report,
+                            parametros = parametros,
+                            guardiaId = guardiaId,
+                            onSuccess = onSuccessHandler,
+                            onFailure = onFailureHandler
+                        )
+                    }
                 }
-                onResetFields(holdCheckState.value)
             }
         }
-    }
+    )
 
     Separator()
 
@@ -200,7 +231,7 @@ fun Template_Text(
     // --- CAMBIO: El estado de 'id' ahora es Int? (nullable Int) ---
     var id by remember { mutableStateOf<Long?>(null) }
     var name by remember { mutableStateOf("") }
-    var evidenciasUri by remember { mutableStateOf<Uri>(Uri.EMPTY) }
+    var evidenciasUri by remember { mutableStateOf<Uri?>(null) }
 
     if (IsScreenElement) {
         Camera(
@@ -245,16 +276,16 @@ fun Template_Text(
     Space()
 
     val onResetAction: (Boolean) -> Unit = { shouldHold ->
-        evidenciasUri = Uri.EMPTY
+        evidenciasUri = null
 
         if (IsScreenElement) {
             if (!shouldHold) {
-                // --- CAMBIO: Reseteamos 'id' a null ---
+                // --- Reseteamos 'id' a null ---
                 id = null
                 name = ""
             }
         } else {
-            // --- CAMBIO: Reseteamos 'id' a null ---
+            // --- Reseteamos 'id' a null ---
             id = null
             name = ""
         }

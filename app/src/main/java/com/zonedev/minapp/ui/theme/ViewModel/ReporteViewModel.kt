@@ -1,10 +1,13 @@
 package com.zonedev.minapp.ui.theme.ViewModel
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import com.zonedev.minapp.ui.theme.Model.Reporte
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -15,11 +18,53 @@ import java.util.UUID
 class ReporteViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val reportesCollection = db.collection("Reporte")
+    private val storage = FirebaseStorage.getInstance()
 
-    // Función para crear un reporte
-    fun crearReporte(tipo: String, parametros: Map<String, Any>, guardiaId: String) {
+    fun subirImagenYCrearReporte(
+        uriLocal: Uri,
+        tipo: String,
+        parametros: Map<String, Any>,
+        guardiaId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val rutaImagenEnStorage = "imagenes_reportes/${UUID.randomUUID()}.jpg"
+        val imagenRef = storage.getReference(rutaImagenEnStorage)
+
+        Log.d("ViewModel", "Iniciando subida a: $rutaImagenEnStorage")
+
+        imagenRef.putFile(uriLocal)
+            .addOnSuccessListener { uploadTask ->
+                Log.d("ViewModel", "Subida de imagen exitosa. Obteniendo URL de descarga...")
+                uploadTask.storage.downloadUrl.addOnSuccessListener { downloadUrl ->
+                    Log.d("ViewModel", "URL de descarga obtenida: $downloadUrl")
+                    val parametrosCompletos = parametros.toMutableMap()
+                    parametrosCompletos["Imgelement"] = downloadUrl.toString()
+                    parametrosCompletos["Evidencias"] = downloadUrl.toString() // Para consistencia con Observaciones
+
+                    crearReporte(tipo, parametrosCompletos, guardiaId, onSuccess, onFailure)
+
+                }.addOnFailureListener { exception ->
+                    Log.e("ViewModel", "Error al obtener URL de descarga", exception)
+                    onFailure(exception)
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("ViewModel", "Error en la subida de imagen", exception)
+                onFailure(exception)
+            }
+    }
+
+    fun crearReporte(
+        tipo: String,
+        parametros: Map<String, Any>,
+        guardiaId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         viewModelScope.launch {
             try {
+                Log.d("ViewModel", "Creando reporte en Firestore con parámetros: $parametros")
                 val reporte = Reporte(
                     tipo = tipo,
                     parametros = parametros,
@@ -28,13 +73,15 @@ class ReporteViewModel : ViewModel() {
                 )
                 val reporteId = UUID.randomUUID().toString()
                 reportesCollection.document(reporteId).set(reporte.toMap()).await()
-                println("Reporte creado con éxito")
+                Log.d("ViewModel", "Reporte creado con éxito en Firestore.")
+                onSuccess()
             } catch (e: Exception) {
-                println("Error al crear reporte: ${e.message}")
+                Log.e("ViewModel", "Error al crear reporte en Firestore", e)
+                onFailure(e)
             }
         }
     }
-
+    // La función buscarReportes no necesita cambios.
     suspend fun buscarReportes(
         guardiaId: String,
         id: String,
@@ -98,5 +145,4 @@ class ReporteViewModel : ViewModel() {
             emptyList()
         }
     }
-
 }

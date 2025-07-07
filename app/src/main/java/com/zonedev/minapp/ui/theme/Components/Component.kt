@@ -66,8 +66,8 @@ import com.zonedev.minapp.ui.theme.text
 fun ButtonApp(
     text: String,
     iconButton: Boolean? = false,
+    isEnabled: Boolean = true,
     onClick: () -> Unit,
-    //modifier: Modifier = Modifier solo si el diseno base no ocupa todo el espacio del modal
 ) {
     Button(
         onClick = onClick,
@@ -75,7 +75,8 @@ fun ButtonApp(
             .fillMaxWidth()
             .height(50.dp),
         colors = ButtonDefaults.buttonColors(color_component),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        enabled = isEnabled
     ) {
         Text(text = text, color = Color.White, fontSize = 18.sp)
         if (iconButton == true) {

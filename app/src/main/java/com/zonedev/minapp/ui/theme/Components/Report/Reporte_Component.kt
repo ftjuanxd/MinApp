@@ -60,37 +60,45 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.min
 
 @Composable
 fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
     val startIndex = (currentPage - 1) * itemsPerPage
-    val endIndex = minOf(startIndex + itemsPerPage, reportes.size)
+    val endIndex = min(startIndex + itemsPerPage, reportes.size)
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
 
-    Column(
+    // Se usa LazyColumn para hacer la lista desplazable y eficiente ---
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
     ) {
         if (reportes.isEmpty()) {
             // Si la lista está vacía, muestra el mensaje.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.Mensaje_Reporte_No_Encontrado),
-                    textAlign = TextAlign.Center
-                )
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.Mensaje_Reporte_No_Encontrado),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         } else {
-            // Si la lista tiene reportes, muestra los elementos.
-            for (index in startIndex until endIndex) {
-                val reporte = reportes[index]
+            // Si la lista tiene reportes, muestra los elementos de la página actual.
+            items(
+                count = endIndex - startIndex,
+                // Proporcionar una clave única ayuda a Compose a optimizar el rendimiento
+                key = { index -> reportes[startIndex + index].hashCode() }
+            ) { indexInPage ->
+                val reporte = reportes[startIndex + indexInPage]
                 val clave = obtenerClavePorTipo(reporte.tipo)
                 Row(modifier = Modifier
                     .fillMaxWidth()
@@ -124,6 +132,7 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
             ) },
             text = {
                 selectedReporte?.let { reporte ->
+                    // Usamos LazyColumn aquí también por si el detalle es muy largo
                     LazyColumn {
                         item {
                             MostrarReporte(reporte, reporte.tipo)
@@ -152,16 +161,13 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
     var fechaInicio by remember { mutableStateOf<Timestamp?>(null) }
     var fechaFin by remember { mutableStateOf<Timestamp?>(null) }
 
-    // Este efecto se ejecutará cada vez que el tipo de reporte cambie.
     LaunchedEffect(tipoFiltro) {
-        // Resetea los otros filtros a su estado inicial.
         idFiltro = ""
         nombreFiltro = ""
         fechaInicio = null
         fechaFin = null
     }
 
-    // Este efecto dispara la búsqueda cuando cualquier filtro cambia.
     LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin) {
         reportes = reporteViewModel.buscarReportes(
             guardiaId = guardiaId,
@@ -173,9 +179,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
         )
     }
 
-    // Filtros de búsqueda
     Column(modifier = Modifier.padding(10.dp)) {
-        // Filtro por Tipo
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -186,9 +190,10 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             ButtonApp(
                 text = tipoFiltro,
                 iconButton = true,
-            ) {
-                expandedTipo = true
-            }
+                onClick = {
+                    expandedTipo = true
+                }
+            )
 
             DropdownMenu(
                 expanded = expandedTipo,
@@ -200,7 +205,6 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 options.forEach { tipo ->
                     DropdownMenuItem(
                         onClick = {
-                            // Solo actualiza el tipo. El LaunchedEffect se encargará de resetear.
                             tipoFiltro = tipo
                             expandedTipo = false
                         },
@@ -212,11 +216,8 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
 
         Space()
 
-        // --- LÓGICA DE UI CONDICIONAL REFACTORIZADA ---
         when (tipoFiltro) {
             "Observacion" -> {
-                // Para Observaciones, solo mostramos un campo para buscar por título.
-                // Usamos la variable 'nombreFiltro' para almacenar el título.
                 CustomTextField(
                     value = nombreFiltro,
                     label = stringResource(R.string.Label_Filtro_Obs_Report),
@@ -225,34 +226,55 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 )
             }
             "Vehicular" -> {
-                // Para Vehicular, mostramos campos para Placa y Nombre.
+                // Filtro para Placa: Acepta letras, números y guiones.
                 CustomTextField(
                     value = idFiltro,
                     label = stringResource(R.string.Label_Filtro_Veh_Report),
-                    onValueChange = { idFiltro = it },
+                    onValueChange = { newValue ->
+                        // Esta validación asegura que el String `idFiltro` solo contenga
+                        // los caracteres permitidos para una placa.
+                        if (newValue.all { it.isLetterOrDigit() || it == '-' }) {
+                            idFiltro = newValue.uppercase() // Opcional: convertir a mayúsculas
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Space()
+                // --- Filtro para Nombre (letras y espacios) ---
                 CustomTextField(
                     value = nombreFiltro,
                     label = stringResource(R.string.Label_Filtro_User_Name_Report),
-                    onValueChange = { nombreFiltro = it },
+                    onValueChange = { newValue ->
+                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                            nombreFiltro = newValue
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
             "Personal", "Elemento" -> {
-                // Para Personal y Elemento, mostramos campos para ID y Nombre.
+                // Filtro para ID: Acepta solo números.
                 CustomTextField(
                     value = idFiltro,
                     label = stringResource(R.string.Label_Filtro_User_ID_Report),
-                    onValueChange = { idFiltro = it },
+                    onValueChange = { newValue ->
+
+                        if (newValue.all { it.isDigit() }) {
+                            idFiltro = newValue
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Space()
+                // --- Filtro para Nombre (letras y espacios) ---
                 CustomTextField(
                     value = nombreFiltro,
                     label = stringResource(R.string.Label_Filtro_User_Name_Report),
-                    onValueChange = { nombreFiltro = it },
+                    onValueChange = { newValue ->
+                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                            nombreFiltro = newValue
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -264,7 +286,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             label = stringResource(R.string.Label_Filtro_Fecha_Inicio_Report),
             selectedDate = fechaInicio,
             onDateSelected = { fechaInicio = it },
-            onDateCleared = { fechaInicio = null } // Proporciona la lógica para limpiar
+            onDateCleared = { fechaInicio = null }
         )
         Space()
 
@@ -272,25 +294,22 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             label = stringResource(R.string.Label_Filtro_Fecha_Fin_Report),
             selectedDate = fechaFin,
             onDateSelected = { fechaFin = it },
-            onDateCleared = { fechaFin = null } // Proporciona la lógica para limpiar
+            onDateCleared = { fechaFin = null }
         )
-    }
-    // Mostrar los reportes filtrados
-    Space(12.dp)
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        PaginationScreen(reportes)
+
+        Space(12.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            PaginationScreen(reportes)
+        }
     }
 }
 
-// Función para formatear la fecha a "dd/MM/yyyy"
 private fun formatDate(timestamp: Timestamp?): String {
     return timestamp?.toDate()?.let { date ->
-        // Define el formato deseado para la fecha
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        // Establece la zona horaria a UTC para mostrar la fecha correctamente
         sdf.timeZone = TimeZone.getTimeZone("UTC")
         sdf.format(date)
     } ?: ""
@@ -308,18 +327,17 @@ fun ModernDatePickerTextField(
     var showDialog by remember { mutableStateOf(false) }
     val formattedDate = formatDate(selectedDate)
 
-    // Se utiliza TextField en lugar de OutlinedTextField para que coincida con CustomTextField
     TextField(
         value = formattedDate,
         onValueChange = {},
-        label = { Text(text = label, color = color_component) }, // Se aplica el color de la etiqueta
+        label = { Text(text = label, color = color_component) },
         readOnly = true,
         enabled = true,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp) // Se añade padding para consistencia
-            .border(2.dp, primary, RoundedCornerShape(12.dp)) // Se aplica el mismo borde
-            .clickable { showDialog = true }, // El campo completo es clickeable
+            .padding(vertical = 8.dp)
+            .border(2.dp, primary, RoundedCornerShape(12.dp))
+            .clickable { showDialog = true },
         trailingIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (selectedDate != null) {
@@ -341,7 +359,6 @@ fun ModernDatePickerTextField(
                 }
             }
         },
-        // Se aplican los mismos colores que en CustomTextField para un look unificado
         colors = TextFieldDefaults.textFieldColors(
             disabledIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
@@ -398,7 +415,6 @@ fun Pagination(
             .background(color_component)
     ) {
         CompositionLocalProvider(LocalContentColor provides background){
-            // Botón de "Previous"
             TextButton(
                 modifier = Modifier.padding(2.dp),
                 onClick = {
@@ -408,10 +424,9 @@ fun Pagination(
                 },
                 enabled = currentPage > 1
             ) {
-                Text(stringResource(R.string.Value_Pagination_Previo), color = if (currentPage > 1)  color_component else background)
+                Text(stringResource(R.string.Value_Pagination_Previo), color = background)
             }
 
-            // Números de páginas
             for (page in 1..totalPages) {
                 TextButton(
                     modifier = Modifier.padding(2.dp),
@@ -421,12 +436,11 @@ fun Pagination(
                 ) {
                     Text(
                         text = page.toString(),
-                        color = if (page == currentPage) background else color_component
+                        color = background
                     )
                 }
             }
 
-            // Botón de "Next"
             TextButton(
                 modifier = Modifier.padding(2.dp),
                 onClick = {
@@ -436,10 +450,9 @@ fun Pagination(
                 },
                 enabled = currentPage < totalPages
             ) {
-                Text(stringResource(R.string.Value_Pagination_Siguiente), color = if (currentPage < totalPages) color_component else background)
+                Text(stringResource(R.string.Value_Pagination_Siguiente), color = background)
             }
         }
-
     }
 }
 
@@ -449,15 +462,14 @@ fun PaginationScreen(reportes: List<Reporte>) {
     val itemsPerPage = 10
     val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
 
-    // Reinicia la página actual si se vuelve inválida después de filtrar
     if (currentPage > totalPages && totalPages > 0) {
         currentPage = totalPages
     } else if (totalPages == 0) {
         currentPage = 1
     }
 
+    // El Column distribuye el espacio verticalmente ---
     Column {
-        // Muestra los controles de paginación solo si hay reportes para paginar.
         if (totalPages > 0) {
             Pagination(
                 totalPages = totalPages,
@@ -467,9 +479,10 @@ fun PaginationScreen(reportes: List<Reporte>) {
         }
 
         Space(10.dp)
-        // ContentForPage ahora maneja el mensaje de estado vacío.
-        ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
 
-        Space(16.dp)
+        // Se usa un Box con weight para que la lista ocupe el espacio restante ---
+        Box(modifier = Modifier.weight(1f)) {
+            ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
+        }
     }
 }

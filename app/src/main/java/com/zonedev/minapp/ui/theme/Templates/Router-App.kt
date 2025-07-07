@@ -131,7 +131,7 @@ fun BaseScreen(
             if (opcClic == "rep"){
                 Space(8.dp)
             }else{
-                Space(20.dp)
+                Space(40.dp)
             }
 
             Column(

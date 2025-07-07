@@ -48,9 +48,9 @@ import java.util.Date
 
 @Composable
 fun Camera(
-    imageUri: Uri,
+    imageUri: Uri?,
     onImageCaptured: (Uri) -> Unit,
-    label: String= "Evidencia"
+    label: String = "Evidencia"
 ) {
     val context = LocalContext.current
     val uriState = remember { mutableStateOf<Uri?>(null) }

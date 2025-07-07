@@ -124,7 +124,8 @@ fun FullScreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(16.dp)
+                    .padding(12.dp)
+                    .padding(top = 12.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,

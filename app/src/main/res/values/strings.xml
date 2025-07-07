@@ -7,7 +7,7 @@
     <string name="Error_Falta_Evidencia">El Campo de Evidencia es Obligatorio</string>
     <string name="Error_ID_Debe_Ser_Numero">El ID debe ser un número</string>
     <string name="Error_Campos_Debe_Ser_Texto">Los campos de texto deben contener solo letras y espacios</string>
-
+    <string name="enviando">Enviando</string>>
 
     <!--Login Screen-->
     <string name="blob_ui_text">BIENVENIDO</string>
