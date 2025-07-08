@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
-import com.zonedev.minapp.ui.theme.Components.Camera
 import com.zonedev.minapp.ui.theme.Components.CheckHold
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.ImagePicker
 import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.Components.Separator
@@ -228,27 +228,25 @@ fun Template_Text(
     Tipo_Report: String = stringResource(R.string.Name_Minuta_Ele),
     guardiaId: String
 ) {
-    // --- CAMBIO: El estado de 'id' ahora es Int? (nullable Int) ---
     var id by remember { mutableStateOf<Long?>(null) }
     var name by remember { mutableStateOf("") }
-    var evidenciasUri by remember { mutableStateOf<Uri?>(null) }
+    // Ahora usamos una lista, aunque solo contendrá 0 o 1 elemento
+    var evidenciasUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     if (IsScreenElement) {
-        Camera(
-            imageUri = evidenciasUri,
-            onImageCaptured = { uri -> evidenciasUri = uri },
-            label = stringResource(R.string.Name_Minuta_Ele)
+        ImagePicker(
+            selectedUris = evidenciasUris,
+            onImagesSelected = { uris -> evidenciasUris = uris },
+            allowMultiple = false, // MODO IMAGEN ÚNICA
+            label = stringResource(R.string.Value_Label_Element)
         )
     }
 
     CustomTextField(
-        // --- Mostramos el 'id' como String, o vacío si es nulo ---
         value = id?.toString() ?: "",
         label = Label_Id,
         onValueChange = { newString ->
-            // Filtramos para asegurarnos que solo sean dígitos
             val filteredString = newString.filter { it.isDigit() }
-            // --- Convertimos el string a Int?, o nulo si está vacío ---
             id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
         },
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -262,7 +260,6 @@ fun Template_Text(
         value = name,
         label = stringResource(R.string.Label_Nombre_Report),
         onValueChange = { newValue ->
-            // Solo permite letras y espacios en el campo de nombre
             if (newValue.all { it.isLetter() || it.isWhitespace() }) {
                 name = newValue
             }
@@ -276,21 +273,20 @@ fun Template_Text(
     Space()
 
     val onResetAction: (Boolean) -> Unit = { shouldHold ->
-        evidenciasUri = null
-
-        if (IsScreenElement) {
-            if (!shouldHold) {
-                // --- Reseteamos 'id' a null ---
-                id = null
-                name = ""
-            }
-        } else {
-            // --- Reseteamos 'id' a null ---
+        if (!shouldHold) {
+            evidenciasUris = emptyList()
             id = null
             name = ""
         }
     }
 
-    // --- Pasamos el 'id' como String a Components_Template ---
-    Components_Template(id?.toString() ?: "", name, Tipo_Report, evidenciasUri, guardiaId, onResetFields = onResetAction)
+    // Pasamos la primera (y única) URI a Components_Template
+    Components_Template(
+        id = id?.toString() ?: "",
+        name = name,
+        tipo_report = Tipo_Report,
+        evidenciasUri = evidenciasUris.firstOrNull(), // Puede ser nulo
+        guardiaId = guardiaId,
+        onResetFields = onResetAction
+    )
 }
