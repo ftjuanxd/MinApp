@@ -1,8 +1,9 @@
 {
   "project_info": {
     "project_number": "1021318098283",
+    "firebase_url": "https://minapp-c89d7-default-rtdb.firebaseio.com",
     "project_id": "minapp-c89d7",
-    "storage_bucket": "minapp-c89d7.appspot.com"
+    "storage_bucket": "minapp-c89d7.firebasestorage.app"
   },
   "client": [
     {

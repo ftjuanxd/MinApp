@@ -30,7 +30,7 @@ class ReporteViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val rutaImagenEnStorage = "imagenes_reportes/${UUID.randomUUID()}.jpg"
+                val rutaImagenEnStorage = "Img_reports/${UUID.randomUUID()}.jpg"
                 val imagenRef = storage.getReference(rutaImagenEnStorage)
 
                 Log.d("ViewModel", "Iniciando subida a: $rutaImagenEnStorage")
