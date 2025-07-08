@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
 
     implementation(libs.coil)
 
@@ -68,7 +69,6 @@ dependencies {
     //SplashScreen
     implementation(libs.splashscreen)
 
-    //CameraX
 
 
     implementation(libs.androidx.core.ktx)

@@ -16,9 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.zonedev.minapp.ui.theme.Components.BaseScreen
 import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.Screen.LoginApp
+import com.zonedev.minapp.ui.theme.Templates.BaseScreen
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -56,12 +56,14 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(navController, startDestination = "login") {
                     composable("login") {
-                        LoginApp(navController, auth) { userId ->
+                        LoginApp(auth) { userId ->
                             idguard = userId // Guarda el userId en la variable
                             // Cargar el guardia desde el ViewModel de forma asincrónica
                             coroutineScope.launch {
                                 guardiaViewModel.getGuardiaById(userId)
-                                navController.navigate("profile")
+                                navController.navigate("profile"){
+                                    popUpTo("login") { inclusive = true }
+                                }
                             }
                         }
                     }

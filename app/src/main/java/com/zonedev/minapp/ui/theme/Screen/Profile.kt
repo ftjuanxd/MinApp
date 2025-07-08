@@ -2,12 +2,9 @@ package com.zonedev.minapp.ui.theme.Screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,10 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material3.CircularProgressIndicator
 import coil.compose.AsyncImagePainter
@@ -31,9 +25,9 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
-import com.zonedev.minapp.ui.theme.color_component
 
 @Composable
 fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
@@ -67,7 +61,7 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
                         // Imagen por defecto en caso de error
                         Image(
                             painter = painterResource(id = R.drawable.logo_user_sample),
-                            contentDescription = "Error loading image",
+                            contentDescription = stringResource(R.string.Error_Image),
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -94,26 +88,26 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
 
 
     CustomTextField(
-        value = guardia.firstOrNull()?.name ?: "Data not available",
-        label = "Name",
+        value = guardia.firstOrNull()?.name ?: stringResource(R.string.Dato_No_Obtenido),
+        label = stringResource(R.string.Label_Name_Profile),
         onValueChange = {},
         isEnabled = false
     )
     CustomTextField(
-        value = guardia.firstOrNull()?.phone ?: "Data not available",
-        label = "Phone",
+        value = guardia.firstOrNull()?.phone ?: stringResource(R.string.Dato_No_Obtenido),
+        label = stringResource(R.string.Label_Phone_Profile),
         onValueChange = {},
         isEnabled = false
     )
     CustomTextField(
-        value = guardia.firstOrNull()?.id ?: "Data not available",
-        label = "N° Id",
+        value = guardia.firstOrNull()?.id ?: stringResource(R.string.Dato_No_Obtenido),
+        label = stringResource(R.string.Label_ID_Profile),
         onValueChange = {},
         isEnabled = false
     )
     CustomTextField(
-        value = guardia.firstOrNull()?.rh ?: "Data not available",
-        label = "Rh",
+        value = guardia.firstOrNull()?.rh ?: stringResource(R.string.Dato_No_Obtenido),
+        label = stringResource(R.string.Label_Rh_Profile),
         onValueChange = {},
         isEnabled = false
     )
@@ -123,31 +117,6 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
 
     // Componente Modal
     if (showDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showDialog = false
-            },
-            title = { Text(
-                text = stringResource(R.string.Name_Modal_Download),
-                color = color_component,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) },
-            text = { Text(text = stringResource(R.string.Content_Modal_Download)) },
-            confirmButton = {
-                // Usa el botón personalizado dentro del modal
-                ButtonApp(
-                    text = stringResource(R.string.Value_Button_Report),
-                    onClick = {
-                        showDialog = false // Cierra el modal cuando se hace clic en "Aceptar"
-                    },
-                    //modifier = Modifier.fillMaxWidth()
-                )
-            }
-        )
+        Modal(showDialog, { showDialog = false },R.string.Name_Modal_Download,R.string.Content_Modal_Download, onClick = { showDialog = false })
     }
 }

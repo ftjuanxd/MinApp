@@ -1,10 +1,13 @@
 package com.zonedev.minapp.ui.theme.ViewModel
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import com.zonedev.minapp.ui.theme.Model.Reporte
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -15,26 +18,95 @@ import java.util.UUID
 class ReporteViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
     private val reportesCollection = db.collection("Reporte")
+    private val storage = FirebaseStorage.getInstance()
 
-    // Función para crear un reporte
-    fun crearReporte(tipo: String, parametros: Map<String, Any>, guardiaId: String) {
+    fun subirImagenYCrearReporte(
+        uriLocal: Uri,
+        tipo: String,
+        parametros: Map<String, Any>,
+        guardiaId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                val reporte = Reporte(
-                    tipo = tipo,
-                    parametros = parametros,
-                    guardiaId = guardiaId,
-                    timestamp = System.currentTimeMillis()
-                )
-                val reporteId = UUID.randomUUID().toString()
-                reportesCollection.document(reporteId).set(reporte.toMap()).await()
-                println("Reporte creado con éxito")
+                // 1. Determina el nombre de la carpeta según el tipo de reporte.
+                val nombreCarpeta = when (tipo) {
+                    "Observacion" -> "img_reports_observaciones"
+                    "Elemento" -> "img_reports_elementos"
+                    else -> "otros_reports" // Una carpeta por defecto para cualquier otro caso
+                }
+
+                // 2. Construye la ruta completa usando la carpeta dinámica.
+                val rutaImagenEnStorage = "${nombreCarpeta}/${UUID.randomUUID()}.jpg"
+                val imagenRef = storage.getReference(rutaImagenEnStorage)
+
+                Log.d("ViewModel", "Iniciando subida a: $rutaImagenEnStorage")
+
+                // Subimos el archivo y esperamos a que la tarea se complete.
+                val uploadTask = imagenRef.putFile(uriLocal).await()
+                Log.d("ViewModel", "Subida de imagen exitosa.")
+
+                // Una vez completada la subida, obtenemos la URL de descarga.
+                val downloadUrl = uploadTask.storage.downloadUrl.await()
+                Log.d("ViewModel", "URL de descarga obtenida: $downloadUrl")
+
+                val parametrosCompletos = parametros.toMutableMap().apply {
+                    this["Imgelement"] = downloadUrl.toString()
+                    this["Evidencias"] = downloadUrl.toString() // Para consistencia con Observaciones
+                }
+
+                // Creamos el reporte en Firestore.
+                crearReporteInterno(tipo, parametrosCompletos, guardiaId)
+                Log.d("ViewModel", "Reporte creado con éxito en Firestore.")
+                onSuccess()
+
             } catch (e: Exception) {
-                println("Error al crear reporte: ${e.message}")
+                Log.e("ViewModel", "Error en la subida de imagen o creación de reporte", e)
+                onFailure(e)
             }
         }
     }
 
+    fun crearReporte(
+        tipo: String,
+        parametros: Map<String, Any>,
+        guardiaId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                crearReporteInterno(tipo, parametros, guardiaId)
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("ViewModel", "Error al crear reporte en Firestore", e)
+                onFailure(e)
+            }
+        }
+    }
+
+    /**
+     * Se ha movido la lógica de creación del reporte a una función suspend interna
+     * para reutilizarla y mantener el código más limpio.
+     */
+    private suspend fun crearReporteInterno(
+        tipo: String,
+        parametros: Map<String, Any>,
+        guardiaId: String
+    ) {
+        Log.d("ViewModel", "Creando reporte en Firestore con parámetros: $parametros")
+        val reporte = Reporte(
+            tipo = tipo,
+            parametros = parametros,
+            guardiaId = guardiaId,
+            timestamp = System.currentTimeMillis()
+        )
+        val reporteId = UUID.randomUUID().toString()
+        reportesCollection.document(reporteId).set(reporte.toMap()).await()
+    }
+
+    // La función buscarReportes no necesita cambios.
     suspend fun buscarReportes(
         guardiaId: String,
         id: String,
@@ -98,5 +170,4 @@ class ReporteViewModel : ViewModel() {
             emptyList()
         }
     }
-
 }

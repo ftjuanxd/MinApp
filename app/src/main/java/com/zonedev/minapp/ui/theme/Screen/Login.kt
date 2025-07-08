@@ -1,15 +1,17 @@
 package com.zonedev.minapp.ui.theme.Screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,64 +25,77 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Space
-import com.zonedev.minapp.ui.theme.MinappTheme
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
-import com.zonedev.minapp.ui.theme.color_component
-import com.zonedev.minapp.ui.theme.text
 
 @Composable
-fun LoginApp(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
+fun LoginApp(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(background)
     ) {
         BlobUi()
-        CustomLoginScreen(navController, auth, onLoginSuccess)
+        CustomLoginScreen(auth, onLoginSuccess)
     }
 }
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Preview
 @Composable
 fun BlobUi() {
     val blob = painterResource(R.drawable.blob)
-    Box(modifier = Modifier.fillMaxSize()) {
+
+    // 1. Usamos BoxWithConstraints para obtener las dimensiones de la pantalla.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // 'maxWidth' y 'maxHeight' ahora están disponibles para usarlos en los modificadores.
+
+        // 2. La imagen del blob se alinea en la esquina superior derecha.
+        //    Su tamaño y desplazamiento ahora son proporcionales al ancho de la pantalla,
+        //    lo que garantiza que se escale correctamente en cualquier dispositivo.
         Image(
             painter = blob,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
-            alignment = Alignment.TopEnd,
-            modifier = Modifier.absoluteOffset(x = (-60).dp, y = (-160).dp)
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(maxWidth * 3f) // Por ejemplo, el 90% del ancho de la pantalla
+                .offset(x = maxWidth * -0.24f, y = -(maxWidth * 0.86f)) // El desplazamiento también es proporcional
         )
+
+        // 3. El texto se alinea arriba a la izquierda y se posiciona con padding.
+        //    Los valores de padding son más seguros que los offsets para el espaciado interno.
         Text(
-            text = stringResource(R.string.blob_ui_text),
+            text = stringResource(R.string.blob_ui_text), // "BIENVENIDO"
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
-            fontSize = 37.sp    ,
+            fontSize = 37.sp,
             fontFamily = bodyFontFamily,
-            textAlign = TextAlign.Justify,
+            textAlign = TextAlign.Start, // Es mejor usar Start que Justify para textos cortos.
             modifier = Modifier
-                .absoluteOffset(x = 10.dp, y = 80.dp)
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 80.dp)
         )
     }
 }
 
 @Composable
-fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
+fun CustomLoginScreen(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") } // Variable para el mensaje de error
+    var errorMessage: Int by remember { mutableStateOf(0) } // Variable para el mensaje de error
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(
@@ -95,6 +110,10 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
             value = email,
             label = stringResource(R.string.Label_name_input_user),
             onValueChange = { if (it.length <= 254) email = it },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            )
         )
 
         Space(16.dp)
@@ -104,7 +123,11 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
             label = stringResource(R.string.Label_name_Input_password),
             onValueChange = { password = it },
             isPasswordField = true,
-            iconTint =R.color.primary
+            iconTint =R.color.color_component,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            )
         )
 
         Space(16.dp)
@@ -112,7 +135,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
         ButtonApp(stringResource(R.string.name_button_login)) {
             if (email.isBlank() || password.isBlank()) {
                 // Muestra un mensaje de error si los campos están vacíos
-                errorMessage = "Ingrese el correo electrónico como la contraseña."
+                errorMessage = R.string.Campos_Vacios_Login
                 showDialog = true
             } else {
                 // Realiza la autenticación si ambos campos tienen valores
@@ -122,7 +145,7 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
                             onLoginSuccess(user.uid) // Pasa el userId de vuelta al MainActivity
                         }
                     } else {
-                        errorMessage = "Los datos de usuario son incorrectos. Por favor, inténtalo de nuevo."
+                        errorMessage = R.string.Parametros_Incorrectos_Login
                         showDialog = true
                         email = ""
                         password = ""
@@ -132,63 +155,6 @@ fun CustomLoginScreen(navController: NavController, auth: FirebaseAuth, onLoginS
         }
 
         // Muestra el modal si showDialog es verdadero
-        Modal(showDialog = showDialog, onDismiss = { showDialog = false }, errorMessage = errorMessage)
-    }
-}
-
-@Composable
-fun Modal(showDialog: Boolean, onDismiss: () -> Unit, errorMessage: String) {
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(
-                text = "ERROR",
-                color= color_component,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 30.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .fillMaxWidth(),
-                )
-            },
-            text = { Text(
-                text = errorMessage,
-                color = text,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 6.dp))
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = stringResource(R.string.Value_Button_Report),
-                    onClick = onDismiss,
-                )
-            }
-        )
-    }
-}
-
-// Función Composable para el preview de Modal
-@Composable
-fun PreviewModalDialog() {
-    MinappTheme { // Envuelve tu componente con tu tema para que los colores y la tipografía se apliquen
-        Modal(
-            showDialog = true, // Establece showDialog a true para que el diálogo sea visible en el preview
-            onDismiss = { false },
-            errorMessage = "¡Ha ocurrido un error inesperado! Por favor, inténtalo de nuevo."
-        )
-    }
-}
-
-
-@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun PreviewModalDialogDark() {
-    MinappTheme(darkTheme = true) { // Fuerza el tema oscuro para este preview
-        Modal(
-            showDialog = true,
-            onDismiss = { /* No se necesita una implementación real para el preview */ },
-            errorMessage = "¡Ha ocurrido un error inesperado! Por favor, inténtalo de nuevo."
-        )
+        Modal(showDialog, { showDialog = false }, R.string.Title_Error, errorMessage, onClick = { showDialog = false })
     }
 }
