@@ -61,7 +61,9 @@ class MainActivity : ComponentActivity() {
                             // Cargar el guardia desde el ViewModel de forma asincrónica
                             coroutineScope.launch {
                                 guardiaViewModel.getGuardiaById(userId)
-                                navController.navigate("profile")
+                                navController.navigate("profile"){
+                                    popUpTo("login") { inclusive = true }
+                                }
                             }
                         }
                     }

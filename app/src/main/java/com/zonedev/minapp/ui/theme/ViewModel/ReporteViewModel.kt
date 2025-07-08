@@ -30,16 +30,24 @@ class ReporteViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val rutaImagenEnStorage = "Img_reports/${UUID.randomUUID()}.jpg"
+                // 1. Determina el nombre de la carpeta según el tipo de reporte.
+                val nombreCarpeta = when (tipo) {
+                    "Observacion" -> "img_reports_observaciones"
+                    "Elemento" -> "img_reports_elementos"
+                    else -> "otros_reports" // Una carpeta por defecto para cualquier otro caso
+                }
+
+                // 2. Construye la ruta completa usando la carpeta dinámica.
+                val rutaImagenEnStorage = "${nombreCarpeta}/${UUID.randomUUID()}.jpg"
                 val imagenRef = storage.getReference(rutaImagenEnStorage)
 
                 Log.d("ViewModel", "Iniciando subida a: $rutaImagenEnStorage")
 
-                // 1. Subimos el archivo y esperamos a que la tarea se complete.
+                // Subimos el archivo y esperamos a que la tarea se complete.
                 val uploadTask = imagenRef.putFile(uriLocal).await()
                 Log.d("ViewModel", "Subida de imagen exitosa.")
 
-                // 2. Una vez completada la subida, obtenemos la URL de descarga.
+                // Una vez completada la subida, obtenemos la URL de descarga.
                 val downloadUrl = uploadTask.storage.downloadUrl.await()
                 Log.d("ViewModel", "URL de descarga obtenida: $downloadUrl")
 
@@ -48,7 +56,7 @@ class ReporteViewModel : ViewModel() {
                     this["Evidencias"] = downloadUrl.toString() // Para consistencia con Observaciones
                 }
 
-                // 3. Creamos el reporte en Firestore.
+                // Creamos el reporte en Firestore.
                 crearReporteInterno(tipo, parametrosCompletos, guardiaId)
                 Log.d("ViewModel", "Reporte creado con éxito en Firestore.")
                 onSuccess()

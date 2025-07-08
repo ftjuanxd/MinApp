@@ -1,5 +1,6 @@
 package com.zonedev.minapp.ui.theme.Templates
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateDpAsState
@@ -61,7 +62,13 @@ fun BaseScreen(
     var opcClic by remember { mutableStateOf(opc) }
     var isSidebarVisible by remember { mutableStateOf(false) }
 
-    // Variable para marcar si vienes desde "home"
+    //  Añadimos un BackHandler para controlar el botón de retroceso.
+    //  Se activa solo si NO estamos en la pantalla "home"
+    BackHandler(enabled = opcClic != "home"){
+        //Si se presiona "atras" desde el celular sino se esta en la pantalla de home se vuelve a home
+        opcClic = "home"
+        isSidebarVisible= false // en caso de que esté abierto el sidebar lo cerramos
+    }
 
     // Variables dinámicas para el contenido del Navbar
     var title by remember { mutableStateOf(R.string.Descripcion_Navbar_Icon_Profile_Screen) }
