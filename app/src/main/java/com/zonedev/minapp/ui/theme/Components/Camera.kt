@@ -1,157 +1,294 @@
 package com.zonedev.minapp.ui.theme.Components
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.primary
-import com.zonedev.minapp.ui.theme.text
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
+
+// ✅ FUNCIÓN DE AYUDA DENTRO DEL MISMO ARCHIVO
+// Al estar aquí, no necesita ser importada y siempre será encontrada.
+@SuppressLint("SimpleDateFormat")
+private fun Context.createImageFile(): File {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val imageFileName = "JPEG_${timeStamp}_"
+    // Se usa el caché interno como alternativa segura si el externo no está disponible.
+    val storageDir = externalCacheDir ?: cacheDir
+    return File.createTempFile(imageFileName, ".jpg", storageDir)
+}
+
 
 @Composable
-fun Camera(
-    imageUri: Uri?,
-    onImageCaptured: (Uri) -> Unit,
-    label: String = "Evidencia"
+fun ImagePicker(
+    modifier: Modifier = Modifier,
+    selectedUris: List<Uri>,
+    onImagesSelected: (List<Uri>) -> Unit,
+    allowMultiple: Boolean,
+    label: String = stringResource(R.string.Label_Upload_Files)
+) {
+    if (allowMultiple) {
+        MultiImagePicker(modifier, selectedUris, onImagesSelected, label)
+    } else {
+        SingleImagePicker(modifier, selectedUris.firstOrNull(), onImagesSelected, label)
+    }
+}
+
+@Composable
+private fun SingleImagePicker(
+    modifier: Modifier = Modifier,
+    selectedUri: Uri?,
+    onImagesSelected: (List<Uri>) -> Unit,
+    label: String
 ) {
     val context = LocalContext.current
-    val uriState = remember { mutableStateOf<Uri?>(null) }
+    var tempUri by remember { mutableStateOf<Uri?>(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && uriState.value != null) {
-            onImageCaptured(uriState.value!!)
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                tempUri?.let { uri -> onImagesSelected(listOf(uri)) }
+            }
         }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted && uriState.value != null) {
-            cameraLauncher.launch(uriState.value!!)
-        } else {
-            Toast.makeText(context, "Permiso denegado", Toast.LENGTH_SHORT).show()
-        }
-    }
+    )
 
     Column(
-        Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .fillMaxWidth()
+            .height(150.dp)
     ) {
-        CustomTextFieldCamera(label, {
-            val file = context.createImageFile()
-            val uriForFile = FileProvider.getUriForFile(
-                context,
-                context.packageName + ".provider",
-                file
-            )
-            uriState.value = uriForFile
-
-            if (ContextCompat.checkSelfPermission(
-                    context, Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                cameraLauncher.launch(uriForFile)
+        Text(
+            text = label,
+            color = primary,
+            modifier = Modifier.padding(bottom = 8.dp, start = 2.dp)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(2.dp, primary, RoundedCornerShape(12.dp))
+                .clickable {
+                    // Ahora la llamada a createImageFile() es local y segura.
+                    val file = context.createImageFile()
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                    tempUri = uri
+                    cameraLauncher.launch(uri)
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            if (selectedUri != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(selectedUri),
+                    contentDescription = "Imagen seleccionada",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                IconButton(
+                    onClick = { onImagesSelected(emptyList()) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Eliminar", tint = Color.White)
+                }
             } else {
-                permissionLauncher.launch(Manifest.permission.CAMERA)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = "Tomar foto",
+                        tint = color_component,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(text = "Tomar Foto", color = color_component)
+                }
             }
-        }, imageUri)
+        }
     }
 }
 
-@SuppressLint("SimpleDateFormat")
-fun Context.createImageFile(): File {
-    val timeStamp = SimpleDateFormat("yyyy_MM_dd_HH:mm:ss").format(Date())
-    val imageFileName = "JPEG_${timeStamp}_"
-    return File.createTempFile(imageFileName, ".jpg", externalCacheDir)
+@Composable
+private fun MultiImagePicker(
+    modifier: Modifier = Modifier,
+    selectedUris: List<Uri>,
+    onImagesSelected: (List<Uri>) -> Unit,
+    label: String
+) {
+    val context = LocalContext.current
+    var tempUri by remember { mutableStateOf<Uri?>(null) }
+
+    val multipleImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents(),
+        onResult = { uris ->
+            val currentUris = selectedUris.toMutableList()
+            currentUris.addAll(uris)
+            onImagesSelected(currentUris.distinct())
+        }
+    )
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                tempUri?.let { uri ->
+                    val currentUris = selectedUris.toMutableList()
+                    currentUris.add(uri)
+                    onImagesSelected(currentUris)
+                }
+            }
+        }
+    )
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            color = primary,
+            fontWeight = FontWeight.Normal,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+        )
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 60.dp, max = 200.dp)
+                .border(2.dp, primary, RoundedCornerShape(12.dp))
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(selectedUris) { uri ->
+                ImagePreviewItem(
+                    uri = uri,
+                    onRemoveClick = {
+                        val updatedUris = selectedUris.toMutableList().apply { remove(uri) }
+                        onImagesSelected(updatedUris)
+                    }
+                )
+            }
+            item {
+                AddImageButton(
+                    icon = Icons.Default.PhotoLibrary,
+                    text = "Galería",
+                    onClick = { multipleImagePickerLauncher.launch("image/*") }
+                )
+            }
+            item {
+                AddImageButton(
+                    icon = Icons.Default.PhotoCamera,
+                    text = "Cámara",
+                    onClick = {
+                        // Ahora la llamada a createImageFile() es local y segura.
+                        val file = context.createImageFile()
+                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                        tempUri = uri
+                        cameraLauncher.launch(uri)
+                    }
+                )
+            }
+        }
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomTextFieldCamera(
-    label: String,
-    onClick: () -> Unit,
-    imageUri: Uri? = null
-) {
+fun ImagePreviewItem(uri: Uri, onRemoveClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .height(100.dp)
-            .clickable { onClick()},
+            .size(100.dp)
+            .clip(RoundedCornerShape(8.dp))
     ) {
-        TextField(
-            value = "",
-            onValueChange = {},
-            readOnly = true,
-            enabled = false,
-            label = { Text(label,color = color_component) },
-            modifier = Modifier
-                .fillMaxSize()
-                .border(2.dp, primary, RoundedCornerShape(12.dp)),
-            colors = TextFieldDefaults.textFieldColors(
-                disabledIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                disabledLabelColor = Color.Transparent,
-                containerColor = background,
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = text,
-                focusedTextColor = text
-            )
-        )
-        val hasImage = imageUri != null && imageUri.toString().isNotEmpty()
-
         Image(
-            painter = if (hasImage)
-                rememberAsyncImagePainter(imageUri)
-            else
-                painterResource(R.drawable.ic_image),
+            painter = rememberAsyncImagePainter(uri),
             contentDescription = null,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(120.dp)
-                .padding(6.dp)
-                .alpha(0.3f)
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
+        IconButton(
+            onClick = onRemoveClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                .size(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Eliminar imagen",
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AddImageButton(icon: ImageVector, text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .border(2.dp, color_component, RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Icon(imageVector = icon, contentDescription = text, tint = color_component, modifier = Modifier.size(32.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = text, color = color_component, fontSize = 12.sp, textAlign = TextAlign.Center)
+        }
     }
 }

@@ -9,6 +9,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import com.zonedev.minapp.ui.theme.Model.Reporte
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
@@ -20,6 +22,7 @@ class ReporteViewModel : ViewModel() {
     private val reportesCollection = db.collection("Reporte")
     private val storage = FirebaseStorage.getInstance()
 
+    // Función para una sola imagen (llama a la versión múltiple)
     fun subirImagenYCrearReporte(
         uriLocal: Uri,
         tipo: String,
@@ -28,44 +31,58 @@ class ReporteViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        subirImagenesYCrearReporte(listOf(uriLocal), tipo, parametros, guardiaId, onSuccess, onFailure)
+    }
+
+    // Función para múltiples imágenes
+    fun subirImagenesYCrearReporte(
+        urisLocales: List<Uri>,
+        tipo: String,
+        parametros: Map<String, Any>,
+        guardiaId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                // 1. Determina el nombre de la carpeta según el tipo de reporte.
-                val nombreCarpeta = when (tipo) {
-                    "Observacion" -> "img_reports_observaciones"
-                    "Elemento" -> "img_reports_elementos"
-                    else -> "otros_reports" // Una carpeta por defecto para cualquier otro caso
-                }
+                val downloadUrls = urisLocales.map { uri ->
+                    async { subirUnaImagen(uri, tipo) }
+                }.awaitAll()
 
-                // 2. Construye la ruta completa usando la carpeta dinámica.
-                val rutaImagenEnStorage = "${nombreCarpeta}/${UUID.randomUUID()}.jpg"
-                val imagenRef = storage.getReference(rutaImagenEnStorage)
-
-                Log.d("ViewModel", "Iniciando subida a: $rutaImagenEnStorage")
-
-                // Subimos el archivo y esperamos a que la tarea se complete.
-                val uploadTask = imagenRef.putFile(uriLocal).await()
-                Log.d("ViewModel", "Subida de imagen exitosa.")
-
-                // Una vez completada la subida, obtenemos la URL de descarga.
-                val downloadUrl = uploadTask.storage.downloadUrl.await()
-                Log.d("ViewModel", "URL de descarga obtenida: $downloadUrl")
+                Log.d("ViewModel", "Todas las imágenes subidas. URLs: $downloadUrls")
 
                 val parametrosCompletos = parametros.toMutableMap().apply {
-                    this["Imgelement"] = downloadUrl.toString()
-                    this["Evidencias"] = downloadUrl.toString() // Para consistencia con Observaciones
+                    this["Evidencias"] = downloadUrls
+                    if (tipo == "Elemento") {
+                        this["Imgelement"] = downloadUrls.firstOrNull() ?: ""
+                    }
                 }
 
-                // Creamos el reporte en Firestore.
                 crearReporteInterno(tipo, parametrosCompletos, guardiaId)
                 Log.d("ViewModel", "Reporte creado con éxito en Firestore.")
                 onSuccess()
 
             } catch (e: Exception) {
-                Log.e("ViewModel", "Error en la subida de imagen o creación de reporte", e)
+                Log.e("ViewModel", "Error en la subida de imágenes o creación de reporte", e)
                 onFailure(e)
             }
         }
+    }
+
+    private suspend fun subirUnaImagen(uri: Uri, tipoReporte: String): String {
+        val nombreCarpeta = when (tipoReporte) {
+            "Observacion" -> "observaciones_reports"
+            "Elemento" -> "elementos_reports"
+            else -> "otros_reports"
+        }
+        val rutaImagenEnStorage = "${nombreCarpeta}/${UUID.randomUUID()}.jpg"
+        val imagenRef = storage.getReference(rutaImagenEnStorage)
+
+        Log.d("ViewModel", "Iniciando subida de una imagen a: $rutaImagenEnStorage")
+        val uploadTask = imagenRef.putFile(uri).await()
+        val downloadUrl = uploadTask.storage.downloadUrl.await()
+        Log.d("ViewModel", "Imagen subida: $downloadUrl")
+        return downloadUrl.toString()
     }
 
     fun crearReporte(
@@ -86,10 +103,6 @@ class ReporteViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Se ha movido la lógica de creación del reporte a una función suspend interna
-     * para reutilizarla y mantener el código más limpio.
-     */
     private suspend fun crearReporteInterno(
         tipo: String,
         parametros: Map<String, Any>,
@@ -106,7 +119,6 @@ class ReporteViewModel : ViewModel() {
         reportesCollection.document(reporteId).set(reporte.toMap()).await()
     }
 
-    // La función buscarReportes no necesita cambios.
     suspend fun buscarReportes(
         guardiaId: String,
         id: String,
@@ -116,27 +128,23 @@ class ReporteViewModel : ViewModel() {
         fechaFin: Timestamp?
     ): List<Reporte> {
         return try {
-            // La consulta base siempre filtra por guardia y por el tipo de reporte seleccionado.
             var query: Query = reportesCollection
                 .whereEqualTo("guardiaId", guardiaId)
                 .whereEqualTo("tipo", tipo)
-
-            // Aplica los filtros de ID y Nombre de forma condicional según el tipo de reporte.
             when (tipo) {
                 "Observacion" -> {
-                    // Para "Observacion", el filtro de "nombre" busca en el campo "Titulo".
                     if (nombre.isNotEmpty()) {
                         val nombrestate = nombre.lowercase().trim()
                         query = query.whereGreaterThanOrEqualTo("parametros.Titulo", nombrestate)
                             .whereLessThan("parametros.Titulo", "${nombrestate}\uF8FF")
                     }
                 }
-                "Personal", "Vehicular", "Elemento" -> {
-                    // Para los otros tipos, el filtro de "ID" busca en "Id_placa".
+                "Personal", "Vehicular" ,"Elemento" -> {
                     if (id.isNotEmpty()) {
-                        query = query.whereEqualTo("parametros.Id_placa", id)
+                        val idstate = id.lowercase().trim()
+                        query = query.whereGreaterThanOrEqualTo("parametros.Id_placa", idstate)
+                            .whereLessThan("parametros.Id_placa", "${idstate}\uF8FF")
                     }
-                    // Y el filtro de "nombre" busca en "Nombre".
                     if (nombre.isNotEmpty()) {
                         val nombrestate = nombre.lowercase().trim()
                         query = query.whereGreaterThanOrEqualTo("parametros.Nombre", nombrestate)
@@ -144,17 +152,12 @@ class ReporteViewModel : ViewModel() {
                     }
                 }
             }
-
-            // El campo 'timestamp' en el modelo de datos es un Long.
-            // Por lo tanto, la consulta debe usar el valor en milisegundos (Long).
             if (fechaInicio != null) {
                 query = query.whereGreaterThanOrEqualTo("timestamp", fechaInicio.toDate().time)
             }
-
             if (fechaFin != null) {
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                 calendar.time = fechaFin.toDate()
-                // Ajusta la fecha de fin para que incluya todo el día hasta las 23:59:59.
                 calendar.set(Calendar.HOUR_OF_DAY, 23)
                 calendar.set(Calendar.MINUTE, 59)
                 calendar.set(Calendar.SECOND, 59)
@@ -162,7 +165,6 @@ class ReporteViewModel : ViewModel() {
                 val fechaFinEndOfDay = calendar.timeInMillis
                 query = query.whereLessThanOrEqualTo("timestamp", fechaFinEndOfDay)
             }
-
             val snapshot = query.get().await()
             snapshot.toObjects(Reporte::class.java)
         } catch (e: Exception) {

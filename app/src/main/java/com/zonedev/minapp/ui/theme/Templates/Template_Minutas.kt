@@ -16,10 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zonedev.minapp.R
 import com.zonedev.minapp.ui.theme.Components.ButtonApp
-import com.zonedev.minapp.ui.theme.Components.Camera
 import com.zonedev.minapp.ui.theme.Components.CheckHold
 import com.zonedev.minapp.ui.theme.Components.CustomTextField
+import com.zonedev.minapp.ui.theme.Components.ImagePicker
 import com.zonedev.minapp.ui.theme.Components.Modal
+import com.zonedev.minapp.ui.theme.Components.PlacaVisualTransformation
 import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.Components.Space
@@ -58,6 +59,18 @@ fun Components_Template(
         text = if (isLoading) stringResource(R.string.enviando) else stringResource(R.string.button_submit),
         isEnabled = !isLoading,
         onClick = {
+            val isIdInvalid = when (tipo_report) {
+                "Vehicular" -> {
+                    // Para vehículos, valida el formato LLL-NNN
+                    val plateRegex = Regex("^[A-Z]{3}-\\d{3}$")
+                    !plateRegex.matches(id.uppercase())
+                }
+                else -> {
+                    // Para otros reportes, valida que sea un número
+                    !id.all { it.isDigit() }
+                }
+            }
+
             val isEvidenceValid = if (tipo_report == "Elemento") evidenciasUri != null && evidenciasUri != Uri.EMPTY else true
 
             when {
@@ -74,9 +87,14 @@ fun Components_Template(
                     showValidationErrorDialog = true
                 }
                 // 3. Validar tipo de dato para ID
-                !id.all { it.isDigit() } -> {
+                isIdInvalid -> {
                     validationErrorTitle = R.string.Error_Validacion_Titulo
-                    validationErrorMessage = R.string.Error_ID_Debe_Ser_Numero // Necesitas este String
+                    // El mensaje de error también es dinámico
+                    validationErrorMessage = if (tipo_report == "Vehicular") {
+                        R.string.Error_Formato_Placa_Invalido // Necesitarás este nuevo string
+                    } else {
+                        R.string.Error_ID_Debe_Ser_Numero
+                    }
                     showValidationErrorDialog = true
                 }
                 // 4. Validar tipo de dato para campos de texto
@@ -223,46 +241,67 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
 
 @Composable
 fun Template_Text(
-    IsScreenElement: Boolean = false,
     Label_Id: String = stringResource(R.string.Value_Default_Label_Id),
     Tipo_Report: String = stringResource(R.string.Name_Minuta_Ele),
     guardiaId: String
 ) {
-    // --- CAMBIO: El estado de 'id' ahora es Int? (nullable Int) ---
     var id by remember { mutableStateOf<Long?>(null) }
+    var placa by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
-    var evidenciasUri by remember { mutableStateOf<Uri?>(null) }
+    // Ahora usamos una lista, aunque solo contendrá 0 o 1 elemento
+    var evidenciasUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
-    if (IsScreenElement) {
-        Camera(
-            imageUri = evidenciasUri,
-            onImageCaptured = { uri -> evidenciasUri = uri },
-            label = stringResource(R.string.Name_Minuta_Ele)
+    if (Tipo_Report == "Elemento") {
+        ImagePicker(
+            selectedUris = evidenciasUris,
+            onImagesSelected = { uris -> evidenciasUris = uris },
+            allowMultiple = false, // MODO IMAGEN ÚNICA
+            label = stringResource(R.string.Value_Label_Element)
+        )
+    }
+    if(Tipo_Report == "Vehicular"){
+        CustomTextField(
+            value = placa,
+            label = Label_Id,
+            onValueChange = { newString ->
+                val filtered = newString.filter { it.isLetterOrDigit() }.lowercase()
+                if (filtered.length <= 6) {
+                    val letters = filtered.take(3)
+                    val numbers = filtered.drop(3)
+
+                    // Solo actualiza el estado si el contenido es válido
+                    if (letters.all { it.isLetter() } && numbers.all { it.isDigit() }) {
+                        placa = filtered // Guarda "ABC123", no "ABC-123"
+                    }
+                }
+            },
+            visualTransformation = PlacaVisualTransformation(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+            )
+        )
+    }else{
+        CustomTextField(
+            value = id?.toString() ?: "",
+            label = Label_Id,
+            onValueChange = { newString ->
+                val filteredString = newString.filter { it.isDigit() }
+                id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            )
         )
     }
 
-    CustomTextField(
-        // --- Mostramos el 'id' como String, o vacío si es nulo ---
-        value = id?.toString() ?: "",
-        label = Label_Id,
-        onValueChange = { newString ->
-            // Filtramos para asegurarnos que solo sean dígitos
-            val filteredString = newString.filter { it.isDigit() }
-            // --- Convertimos el string a Int?, o nulo si está vacío ---
-            id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
-        },
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Next,
-        )
-    )
     Space()
 
     CustomTextField(
         value = name,
         label = stringResource(R.string.Label_Nombre_Report),
         onValueChange = { newValue ->
-            // Solo permite letras y espacios en el campo de nombre
             if (newValue.all { it.isLetter() || it.isWhitespace() }) {
                 name = newValue
             }
@@ -275,10 +314,19 @@ fun Template_Text(
 
     Space()
 
-    val onResetAction: (Boolean) -> Unit = { shouldHold ->
-        evidenciasUri = null
+    val id_placa = if (Tipo_Report == "Vehicular") {
+        // Re-construimos el formato final ANTES de pasarlo al siguiente componente
+        val letters = placa.take(3)
+        val numbers = placa.drop(3)
+        if (numbers.isNotEmpty()) "$letters-$numbers" else letters
+    } else {
+        id?.toString() ?: ""
+    }
 
-        if (IsScreenElement) {
+    val onResetAction: (Boolean) -> Unit = { shouldHold ->
+        evidenciasUris = emptyList()
+
+        if (Tipo_Report == "Elemento") {
             if (!shouldHold) {
                 // --- Reseteamos 'id' a null ---
                 id = null
@@ -288,9 +336,16 @@ fun Template_Text(
             // --- Reseteamos 'id' a null ---
             id = null
             name = ""
+            placa = ""
         }
     }
-
-    // --- Pasamos el 'id' como String a Components_Template ---
-    Components_Template(id?.toString() ?: "", name, Tipo_Report, evidenciasUri, guardiaId, onResetFields = onResetAction)
+    // Pasamos la primera (y única) URI a Components_Template
+    Components_Template(
+        id = id_placa,
+        name = name,
+        tipo_report = Tipo_Report,
+        evidenciasUri = evidenciasUris.firstOrNull(), // Puede ser nulo
+        guardiaId = guardiaId,
+        onResetFields = onResetAction
+    )
 }

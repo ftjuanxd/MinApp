@@ -44,10 +44,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -59,8 +61,42 @@ import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.primary
 import com.zonedev.minapp.ui.theme.text
 
+class PlacaVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        // El texto de entrada es el dato "crudo", ej: "ABC123"
+        val inputText = text.text
 
-// Este Archivo manejara solo los componentes en Comun con la Interfaz
+        val formattedText = buildString {
+            // Añade las primeras 3 letras
+            append(inputText.take(3))
+
+            // Si hay números, añade el guion
+            if (inputText.length > 3) {
+                append("-")
+                // Añade los números (los caracteres que siguen a los 3 primeros)
+                append(inputText.substring(3))
+            }
+        }
+
+        // El OffsetMapping es la clave para que el cursor no se mueva incorrectamente
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                // Mueve el cursor 1 posición a la derecha si está después de las letras
+                return if (offset > 3) offset + 1 else offset
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                // Mueve el cursor 1 posición a la izquierda si está después del guion
+                return if (offset > 4) offset - 1 else offset
+            }
+        }
+
+        return TransformedText(
+            text = AnnotatedString(formattedText),
+            offsetMapping = offsetMapping
+        )
+    }
+}
 
 @Composable
 fun ButtonApp(
@@ -139,6 +175,7 @@ fun CustomTextField(
     modifier: Modifier = Modifier,
     isUser: Boolean? = null,
     isPasswordField: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -172,7 +209,7 @@ fun CustomTextField(
             .clickable {
                 onClick?.invoke()
             },
-        visualTransformation = if (isPasswordField && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
+        visualTransformation = if (isPasswordField && !passwordVisible) PasswordVisualTransformation() else visualTransformation,
         keyboardOptions = keyboardOptions,
         trailingIcon = {
             if (isPasswordField)
