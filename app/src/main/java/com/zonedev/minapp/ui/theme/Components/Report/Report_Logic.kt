@@ -3,13 +3,17 @@ package com.zonedev.minapp.ui.theme.Components.Report
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
@@ -75,12 +79,12 @@ fun crearParametrosParaReporte(tipo: String, datos: Map<String, Any?>): Map<Stri
                 "Descripcion" to (datos["Descripcion"]?: "")
             )
         }
-        else -> emptyMap() // Manejo de casos de tipos desconocidos
+        else -> emptyMap()
     }
 }
 
 fun formatearFecha(timestamp: Long): String {
-    val sdf = SimpleDateFormat("EEE, d MMM yyyy - h:mm a", Locale.getDefault())
+    val sdf = SimpleDateFormat("EEE, d MMM, yyyy - h:mm a", Locale.getDefault())
     return sdf.format(timestamp)
 }
 
@@ -88,18 +92,15 @@ fun formatearFecha(timestamp: Long): String {
 fun FullScreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false // Clave para que el diálogo ocupe toda la pantalla.
-        )
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.85f))
-                .clickable { onDismiss() }, // Permite cerrar tocando en cualquier lugar
+                .clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
-            // La imagen a pantalla completa.
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(Uri.parse(imageUrl))
@@ -107,25 +108,18 @@ fun FullScreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
                     .build(),
                 contentDescription = "Imagen en pantalla completa",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit // 'Fit' asegura que toda la imagen sea visible
+                contentScale = ContentScale.Fit
             ) {
                 when (painter.state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-                    else -> {
-                        SubcomposeAsyncImageContent()
-                    }
+                    is AsyncImagePainter.State.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    else -> SubcomposeAsyncImageContent()
                 }
             }
-
-            // Un botón para cerrar en la esquina superior derecha.
             IconButton(
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(12.dp)
-                    .padding(top = 12.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
@@ -138,16 +132,14 @@ fun FullScreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
     }
 }
 
+
 @Composable
 fun MostrarReporte(reporte: Reporte, tipo: String) {
-    // Estado para gestionar qué URL de imagen está actualmente en pantalla completa.
-    // Si es nulo, ninguna imagen está en pantalla completa.
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
 
     val ordenParametros = when (tipo) {
         "Observacion" -> listOf("Titulo", "Observacion", "Evidencias")
-        "Personal" -> listOf("Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
-        "Vehicular" -> listOf("Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
+        "Personal", "Vehicular" -> listOf("Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
         "Elemento" -> listOf("Imgelement", "Id_placa", "Nombre", "Destino", "Autorizacion", "Descripcion")
         else -> listOf()
     }
@@ -155,65 +147,69 @@ fun MostrarReporte(reporte: Reporte, tipo: String) {
     Column {
         Text(text = formatearFecha(reporte.timestamp))
 
-        if (reporte.parametros.isNotEmpty()) {
-            ordenParametros.forEach { key ->
+        // Recopilar todas las URLs de imágenes primero
+        val allImageUrls = mutableListOf<String>()
+        reporte.parametros["Imgelement"]?.let { value ->
+            if (value is String && value.isNotEmpty()) {
+                allImageUrls.add(value)
+            }
+        }
+        reporte.parametros["Evidencias"]?.let { value ->
+            when (value) {
+                is String -> if (value.isNotEmpty() && value != "Ninguna") allImageUrls.add(value) else {}
+                is List<*> -> allImageUrls.addAll(value.filterIsInstance<String>())
+                else -> {}
+            }
+        }
+
+        // Mostrar los parámetros de texto
+        ordenParametros.forEach { key ->
+            if (key != "Imgelement" && key != "Evidencias") {
                 reporte.parametros[key]?.let { value ->
-                    // Comprueba si el parámetro es una de nuestras claves de imagen y si el valor es un String no vacío.
-                    if ((key == "Imgelement" || key == "Evidencias") && value is String && value.isNotEmpty() && value != "Ninguna") {
-                        val imageUri = Uri.parse(value)
-                        Text(text = "$key:")
-                        // Muestra una miniatura de la imagen en la que se puede hacer clic.
+                    Text(text = "$key: $value")
+                }
+            }
+        }
+
+        // Mostrar el carrusel de imágenes si hay alguna
+        if (allImageUrls.isNotEmpty()) {
+            Text(text = if (tipo == "Elemento") "Imagen del Elemento:" else "Evidencias:")
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                items(allImageUrls) { imageUrl ->
+                    Box(
+                        modifier = Modifier
+                            .height(150.dp)
+                            .width(150.dp)
+                            .clickable { fullScreenImageUrl = imageUrl}
+                    ) {
                         SubcomposeAsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(imageUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Evidencia del reporte",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(vertical = 8.dp)
-                                .clickable {
-                                    // Establece la URL que se mostrará en pantalla completa.
-                                    fullScreenImageUrl = value
-                                },
+                            model = ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true).build(),
+                            contentDescription = "Evidencia",
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         ) {
                             when (painter.state) {
-                                is AsyncImagePainter.State.Loading -> {
-                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                }
-                                is AsyncImagePainter.State.Error -> {
-                                    // Muestra un marcador de posición o un mensaje de error si la imagen no se carga.
-                                    Box(modifier = Modifier.fillMaxSize().background(Color.Gray), contentAlignment = Alignment.Center) {
-                                        Text("No se pudo cargar la imagen")
-                                    }
-                                }
-                                else -> {
-                                    SubcomposeAsyncImageContent()
-                                }
+                                is AsyncImagePainter.State.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                is AsyncImagePainter.State.Error -> Box(modifier = Modifier.fillMaxSize().background(Color.Gray), contentAlignment = Alignment.Center) { Text("Error") }
+                                else -> SubcomposeAsyncImageContent()
                             }
                         }
-                    } else {
-                        // Para todos los demás parámetros, muéstralos como texto.
-                        Text(text = "$key: $value")
                     }
                 }
             }
-        } else {
-            Text(text = "No hay parámetros disponibles")
         }
+
     }
 
-    // Si se establece una URL de imagen, muestra el diálogo de pantalla completa.
+    // Lógica para el visor de pantalla completa
     fullScreenImageUrl?.let { imageUrl ->
-        FullScreenImageViewer(
-            imageUrl = imageUrl,
-            onDismiss = {
-                // Restablece el estado para ocultar el diálogo.
-                fullScreenImageUrl = null
-            }
-        )
+        FullScreenImageViewer(imageUrl = imageUrl) {
+            fullScreenImageUrl = null
+        }
     }
 }
 
