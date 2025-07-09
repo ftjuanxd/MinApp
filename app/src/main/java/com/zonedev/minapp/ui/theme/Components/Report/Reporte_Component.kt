@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
@@ -41,6 +42,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -222,7 +225,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                     value = nombreFiltro,
                     label = stringResource(R.string.Label_Filtro_Obs_Report),
                     onValueChange = { nombreFiltro = it },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                    )
                 )
             }
             "Vehicular" -> {
@@ -234,9 +241,13 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                         // Esta validación asegura que el String `idFiltro` solo contenga
                         // los caracteres permitidos para una placa.
                         if (newValue.all { it.isLetterOrDigit() || it == '-' }) {
-                            idFiltro = newValue.uppercase() // Opcional: convertir a mayúsculas
+                            idFiltro = newValue.lowercase()
                         }
                     },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Space()
@@ -249,7 +260,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                             nombreFiltro = newValue
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                    )
                 )
             }
             "Personal", "Elemento" -> {
@@ -258,12 +273,15 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                     value = idFiltro,
                     label = stringResource(R.string.Label_Filtro_User_ID_Report),
                     onValueChange = { newValue ->
-
                         if (newValue.all { it.isDigit() }) {
                             idFiltro = newValue
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done,
+                    )
                 )
                 Space()
                 // --- Filtro para Nombre (letras y espacios) ---
@@ -275,7 +293,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                             nombreFiltro = newValue
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                    )
                 )
             }
         }

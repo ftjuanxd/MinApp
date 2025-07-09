@@ -5,5 +5,5 @@ import com.zonedev.minapp.ui.theme.Templates.Template_Text
 
 @Composable
 fun Element(guardiaId: String) {
-    Template_Text(true, guardiaId = guardiaId)
+    Template_Text( guardiaId = guardiaId)
 }

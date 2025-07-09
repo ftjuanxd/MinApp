@@ -49,6 +49,7 @@
     <string name="Name_Modal_Report">REPORTADO</string>
     <string name="Content_Modal_Report">El Reporte fue realizado</string>
     <string name="Value_Button_Report">CERRAR</string>
+    <string name="Error_Formato_Placa_Invalido">El formato de la placa es incorrecto. Debe ser ABC-123.</string>
 
     <!--Interfaz Observation-->
 

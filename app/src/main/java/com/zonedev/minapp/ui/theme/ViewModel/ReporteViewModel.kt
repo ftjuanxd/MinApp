@@ -139,9 +139,11 @@ class ReporteViewModel : ViewModel() {
                             .whereLessThan("parametros.Titulo", "${nombrestate}\uF8FF")
                     }
                 }
-                "Personal", "Vehicular", "Elemento" -> {
+                "Personal", "Vehicular" ,"Elemento" -> {
                     if (id.isNotEmpty()) {
-                        query = query.whereEqualTo("parametros.Id_placa", id)
+                        val idstate = id.lowercase().trim()
+                        query = query.whereGreaterThanOrEqualTo("parametros.Id_placa", idstate)
+                            .whereLessThan("parametros.Id_placa", "${idstate}\uF8FF")
                     }
                     if (nombre.isNotEmpty()) {
                         val nombrestate = nombre.lowercase().trim()
