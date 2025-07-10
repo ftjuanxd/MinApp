@@ -91,29 +91,29 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
         value = guardia.firstOrNull()?.name ?: stringResource(R.string.Dato_No_Obtenido),
         label = stringResource(R.string.Label_Name_Profile),
         onValueChange = {},
-        isEnabled = false
+        isEnabled = false,
     )
     CustomTextField(
         value = guardia.firstOrNull()?.phone ?: stringResource(R.string.Dato_No_Obtenido),
         label = stringResource(R.string.Label_Phone_Profile),
         onValueChange = {},
-        isEnabled = false
+        isEnabled = false,
     )
     CustomTextField(
         value = guardia.firstOrNull()?.id ?: stringResource(R.string.Dato_No_Obtenido),
         label = stringResource(R.string.Label_ID_Profile),
         onValueChange = {},
-        isEnabled = false
+        isEnabled = false,
     )
     CustomTextField(
         value = guardia.firstOrNull()?.rh ?: stringResource(R.string.Dato_No_Obtenido),
         label = stringResource(R.string.Label_Rh_Profile),
         onValueChange = {},
-        isEnabled = false
+        isEnabled = false,
     )
 
     // Usamos ButtonApp aquí también
-    ButtonApp(text = stringResource(R.string.Text_profileScreen_Button)) { showDialog = true }
+    ButtonApp(text = stringResource(R.string.Text_profileScreen_Button), onClick =  { showDialog = true })
 
     // Componente Modal
     if (showDialog) {

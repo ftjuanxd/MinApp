@@ -9,7 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,6 +26,7 @@ import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
+import com.zonedev.minapp.util.ObservationsTestTags
 
 @Composable
 fun Observations(guardiaId: String) {
@@ -45,7 +48,7 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
         ImagePicker(
             selectedUris = evidenciasUris,
             onImagesSelected = { uris -> evidenciasUris = uris },
-            allowMultiple = true // MODO MÚLTIPLE
+            allowMultiple = true
         )
 
         Space()
@@ -57,7 +60,8 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next,
-            )
+            ),
+            text_Tag=ObservationsTestTags.SUBJECT_FIELD
         )
         CustomTextField(
             value = observation,
@@ -67,12 +71,14 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Done,
             ),
-            pdHeight = 200.dp
+            pdHeight = 200.dp,
+            text_Tag= ObservationsTestTags.OBSERVATION_FIELD
         )
 
         ButtonApp(
             text = if (isLoading) stringResource(R.string.enviando) else stringResource(R.string.button_submit),
             isEnabled = !isLoading,
+            modifier = Modifier.testTag(ObservationsTestTags.SUBMIT_BUTTON),
             onClick = {
                 if (subject.isBlank() || observation.isBlank()) {
                     dialogMessage = "Error"
@@ -94,6 +100,9 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
                     }
                     val onFailureHandler: (Exception) -> Unit = { exception ->
                         isLoading = false
+                        // Para pruebas, es mejor manejar el estado de la UI que mostrar un Toast
+                        dialogMessage = "NetworkError" // Podríamos usar un nuevo estado
+                        showDialog = true
                         Toast.makeText(context, "Error al enviar: ${exception.message}", Toast.LENGTH_LONG).show()
                     }
 
@@ -125,18 +134,27 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
         if (showDialog) {
             val dialogTitle: Int
             val dialogContent: Int
+            val modalTestTag: String
+
             when (dialogMessage) {
                 "Error" -> {
                     dialogTitle = R.string.Title_Error
                     dialogContent = R.string.Mensaje_Por_Campos_Vacios
+                    modalTestTag = ObservationsTestTags.ERROR_MODAL
                 }
                 "Correcto" -> {
                     dialogTitle = R.string.Name_Modal_Report
                     dialogContent = R.string.Content_Modal_Report
+                    modalTestTag = ObservationsTestTags.SUCCESS_MODAL
                 }
-                else -> {
+                "NetworkError"-> { // Incluye "NetworkError" y otros casos
+                    dialogTitle = R.string.Title_Error // Título genérico de error
+                    dialogContent = R.string.Error_Network // Un nuevo string genérico
+                    modalTestTag = ObservationsTestTags.ERROR_MODAL
+                }else -> {
                     dialogTitle = 0
-                    dialogContent = 0
+                    dialogContent =0
+                    modalTestTag = ""
                 }
             }
             if (dialogTitle != 0) {
@@ -148,7 +166,8 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
                     },
                     title = dialogTitle,
                     Message = dialogContent,
-                    onClick = { showDialog = false }
+                    onClick = { showDialog = false },
+                    modifier = Modifier.testTag(modalTestTag)
                 )
             }
         }
