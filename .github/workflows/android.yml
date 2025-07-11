@@ -21,23 +21,22 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle' # Simplifica el cacheo de Gradle
+          cache: 'gradle'
 
       - name: 3. Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # Acepta las licencias del SDK automáticamente
-          accept-android-sdk-licenses: true
-          # Instala los paquetes usando el formato de sdkmanager
-          packages: 'platforms;android-31 build-tools;31.0.0 ndk;21.4.7075529'
-
-      - name: 4. Make gradlew executable
+      
+      - name: 4. Fix gradlew line endings
+        run: sed -i 's/\r$//' ./gradlew
+      
+      - name: 5. Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: 5. Build and run unit tests
+      - name: 6. Build and run unit tests
         run: ./gradlew build testDebugUnitTest
 
-      - name: 6. Run Android instrumented tests
+      - name: 7. Run Android instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
@@ -59,14 +58,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-
-      - name: 3. Make gradlew executable
+          
+      - name: 3. Fix gradlew line endings
+        run: sed -i 's/\r$//' ./gradlew
+        
+      - name: 4. Make gradlew executable
         run: chmod +x ./gradlew
         
-      - name: 4. Build APK
+      - name: 5. Build APK
         run: ./gradlew assembleDebug
 
-      - name: 5. Upload APK artifact
+      - name: 6. Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
