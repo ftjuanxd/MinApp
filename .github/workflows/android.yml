@@ -28,6 +28,11 @@ jobs:
         with:
           # Aceptar las licencias del SDK es una buena práctica para evitar fallos.
           accept-android-sdk-licenses: true
+          # CORRECCIÓN: Se añaden los paquetes necesarios para el emulador.
+          packages: >
+            platform-tools
+            emulator
+            system-images;android-31;google_apis;x86_64
 
       - name: 4. Fix gradlew line endings
         run: sed -i 's/\r$//' ./gradlew
