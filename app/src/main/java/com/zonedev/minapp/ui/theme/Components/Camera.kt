@@ -1,7 +1,9 @@
 package com.zonedev.minapp.ui.theme.Components
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.zonedev.minapp.R
@@ -58,8 +61,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ✅ FUNCIÓN DE AYUDA DENTRO DEL MISMO ARCHIVO
-// Al estar aquí, no necesita ser importada y siempre será encontrada.
 @SuppressLint("SimpleDateFormat")
 private fun Context.createImageFile(): File {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -84,7 +85,6 @@ fun ImagePicker(
         SingleImagePicker(modifier, selectedUris.firstOrNull(), onImagesSelected, label)
     }
 }
-
 @Composable
 private fun SingleImagePicker(
     modifier: Modifier = Modifier,
@@ -95,6 +95,7 @@ private fun SingleImagePicker(
     val context = LocalContext.current
     var tempUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Launcher para obtener la imagen de la cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -103,6 +104,38 @@ private fun SingleImagePicker(
             }
         }
     )
+
+    // --- ¡NUEVO! Launcher para solicitar el permiso de la cámara ---
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Si el permiso es concedido, lanza la cámara
+                val file = context.createImageFile()
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                tempUri = uri
+                cameraLauncher.launch(uri)
+            } else {
+                // Opcional: Mostrar un mensaje al usuario si deniega el permiso
+            }
+        }
+    )
+
+    val launchCamera: () -> Unit = {
+        val permission = Manifest.permission.CAMERA
+        val permissionStatus = ContextCompat.checkSelfPermission(context, permission)
+
+        if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+            // Si ya tenemos permiso, lanza la cámara directamente
+            val file = context.createImageFile()
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+            tempUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            // Si no tenemos permiso, lo solicita
+            permissionLauncher.launch(permission)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -120,13 +153,7 @@ private fun SingleImagePicker(
                 .height(150.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .border(2.dp, primary, RoundedCornerShape(12.dp))
-                .clickable {
-                    // Ahora la llamada a createImageFile() es local y segura.
-                    val file = context.createImageFile()
-                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-                    tempUri = uri
-                    cameraLauncher.launch(uri)
-                },
+                .clickable { launchCamera() }, // Llama a nuestra nueva función
             contentAlignment = Alignment.Center
         ) {
             if (selectedUri != null) {
@@ -160,6 +187,7 @@ private fun SingleImagePicker(
     }
 }
 
+
 @Composable
 private fun MultiImagePicker(
     modifier: Modifier = Modifier,
@@ -170,6 +198,7 @@ private fun MultiImagePicker(
     val context = LocalContext.current
     var tempUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Launcher para la galería
     val multipleImagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents(),
         onResult = { uris ->
@@ -179,6 +208,7 @@ private fun MultiImagePicker(
         }
     )
 
+    // Launcher para la cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -192,6 +222,31 @@ private fun MultiImagePicker(
         }
     )
 
+    // --- Launcher para solicitar el permiso de la cámara ---
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                val file = context.createImageFile()
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                tempUri = uri
+                cameraLauncher.launch(uri)
+            }
+        }
+    )
+
+    val launchCamera: () -> Unit = {
+        val permission = Manifest.permission.CAMERA
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+            val file = context.createImageFile()
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+            tempUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            permissionLauncher.launch(permission)
+        }
+    }
+
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
@@ -204,20 +259,17 @@ private fun MultiImagePicker(
             columns = GridCells.Fixed(3),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 60.dp, max = 200.dp)
+                .heightIn(min = 110.dp) // Ajuste de altura para mejor visualización
                 .border(2.dp, primary, RoundedCornerShape(12.dp))
                 .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(selectedUris) { uri ->
-                ImagePreviewItem(
-                    uri = uri,
-                    onRemoveClick = {
-                        val updatedUris = selectedUris.toMutableList().apply { remove(uri) }
-                        onImagesSelected(updatedUris)
-                    }
-                )
+                ImagePreviewItem(uri = uri) {
+                    val updatedUris = selectedUris.toMutableList().apply { remove(uri) }
+                    onImagesSelected(updatedUris)
+                }
             }
             item {
                 AddImageButton(
@@ -230,18 +282,13 @@ private fun MultiImagePicker(
                 AddImageButton(
                     icon = Icons.Default.PhotoCamera,
                     text = "Cámara",
-                    onClick = {
-                        // Ahora la llamada a createImageFile() es local y segura.
-                        val file = context.createImageFile()
-                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-                        tempUri = uri
-                        cameraLauncher.launch(uri)
-                    }
+                    onClick = launchCamera // Llama a nuestra nueva función
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun ImagePreviewItem(uri: Uri, onRemoveClick: () -> Unit) {
