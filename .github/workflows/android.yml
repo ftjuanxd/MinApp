@@ -26,10 +26,12 @@ jobs:
       - name: 3. Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-      
+          # Aceptar las licencias del SDK es una buena práctica para evitar fallos.
+          accept-android-sdk-licenses: true
+
       - name: 4. Fix gradlew line endings
         run: sed -i 's/\r$//' ./gradlew
-      
+
       - name: 5. Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -40,9 +42,8 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
-          # El script para ejecutar las pruebas de instrumentación
           script: ./gradlew connectedCheck
-          
+
   # Este job se ejecuta solo si 'build-and-test' es exitoso y estamos en la rama 'main'
   publish-artifact:
     needs: build-and-test
@@ -58,13 +59,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-          
+
       - name: 3. Fix gradlew line endings
         run: sed -i 's/\r$//' ./gradlew
-        
+
       - name: 4. Make gradlew executable
         run: chmod +x ./gradlew
-        
+      
       - name: 5. Build APK
         run: ./gradlew assembleDebug
 
@@ -73,3 +74,4 @@ jobs:
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
