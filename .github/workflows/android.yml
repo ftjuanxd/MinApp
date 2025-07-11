@@ -28,7 +28,7 @@ jobs:
         with:
           # Aceptar las licencias del SDK es una buena práctica para evitar fallos.
           accept-android-sdk-licenses: true
-          # CORRECCIÓN: Se añaden los paquetes necesarios para el emulador.
+          # Se añaden los paquetes necesarios para el emulador.
           packages: >
             platform-tools
             emulator
@@ -47,6 +47,10 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
+          # CORRECCIÓN: Se especifica el 'target' y la 'arch' para que coincidan
+          # con la imagen del sistema instalada en el paso anterior.
+          target: google_apis
+          arch: x86_64
           script: ./gradlew connectedCheck
 
   # Este job se ejecuta solo si 'build-and-test' es exitoso y estamos en la rama 'main'
