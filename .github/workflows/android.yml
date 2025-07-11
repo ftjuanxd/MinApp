@@ -13,66 +13,61 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
 
-      - name: Fix line endings on gradlew
-        run: sed -i 's/\r$//' gradlew
-
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: 2. Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle' # Simplifica el cacheo de Gradle
 
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Set up Android SDK
+      - name: 3. Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 31
-          build-tools: "31.0.0"
-          ndk: "21.4.7075529"
+          # Acepta las licencias del SDK automáticamente
+          accept-android-sdk-licenses: true
+          # Instala los paquetes usando el formato de sdkmanager
+          packages: 'platforms;android-31 build-tools;31.0.0 ndk;21.4.7075529'
 
-      - name: Build and unit test
-        run: |
-          ./gradlew assembleDebug
-          ./gradlew testDebugUnitTest
+      - name: 4. Make gradlew executable
+        run: chmod +x ./gradlew
 
-      - name: Start Android emulator
+      - name: 5. Build and run unit tests
+        run: ./gradlew build testDebugUnitTest
+
+      - name: 6. Run Android instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
-          target: default
-          arch: x86_64
-          emulator-options: "-no-window"
-          script: |
-            adb wait-for-device
-            adb devices
-
+          # El script para ejecutar las pruebas de instrumentación
+          script: ./gradlew connectedCheck
+          
+  # Este job se ejecuta solo si 'build-and-test' es exitoso y estamos en la rama 'main'
   publish-artifact:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
 
-     # - name: Upload APK artifact
-      #  uses: actions/upload-artifact@v3
-       # with:
-        #  name: debug-apk
-         # path: app/build/outputs/apk/debug/app-debug.apk
+      - name: 2. Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
 
-  # Agrega jobs de despliegue a Google Play o Firebase si los necesitas.
+      - name: 3. Make gradlew executable
+        run: chmod +x ./gradlew
+        
+      - name: 4. Build APK
+        run: ./gradlew assembleDebug
+
+      - name: 5. Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
