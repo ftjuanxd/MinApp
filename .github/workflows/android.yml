@@ -53,21 +53,21 @@ jobs:
         shard: [1, 2, 3, 4] # Crea 4 trabajos paralelos para las pruebas
       fail-fast: false # Permite que todos los shards terminen aunque uno falle
     
-    # CORRECCIÓN: Se calcula el índice en una variable de entorno para evitar errores de sintaxis.
-    env:
-      SHARD_INDEX: ${{ matrix.shard - 1 }}
-
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 2. Download APK artifacts
+      # CORRECCIÓN DEFINITIVA: Se calcula y exporta el índice del shard a una variable de entorno.
+      - name: 2. Set shard index environment variable
+        run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
+
+      - name: 3. Download APK artifacts
         uses: actions/download-artifact@v4
         with:
           name: apks
           path: apks/
 
-      - name: 3. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+      - name: 4. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
