@@ -26,14 +26,18 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: 3. Make gradlew executable
+      # CORRECCIÓN: Se corrigen los finales de línea del script gradlew
+      - name: 3. Fix gradlew line endings
+        run: sed -i 's/\r$//' ./gradlew
+
+      - name: 4. Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: 4. Run unit tests and build APK
+      - name: 5. Run unit tests and build APK
         # Ejecuta las pruebas unitarias y empaqueta los APKs de debug y de prueba
         run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest
 
-      - name: 5. Upload APK artifacts
+      - name: 6. Upload APK artifacts
         # Sube tanto el APK de la app como el APK de pruebas para que el siguiente job los use
         uses: actions/upload-artifact@v4
         with:
@@ -57,17 +61,20 @@ jobs:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      # CORRECCIÓN DEFINITIVA: Se calcula y exporta el índice del shard a una variable de entorno.
-      - name: 2. Set shard index environment variable
+      # CORRECCIÓN: Se corrigen los finales de línea también en este job
+      - name: 2. Fix gradlew line endings
+        run: sed -i 's/\r$//' ./gradlew
+
+      - name: 3. Set shard index environment variable
         run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
 
-      - name: 3. Download APK artifacts
+      - name: 4. Download APK artifacts
         uses: actions/download-artifact@v4
         with:
           name: apks
           path: apks/
 
-      - name: 4. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+      - name: 5. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
