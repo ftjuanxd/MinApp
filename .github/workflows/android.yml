@@ -76,7 +76,8 @@ jobs:
             adb install apks/app-debug.apk
             adb install apks/app-debug-androidTest.apk
             # Ejecuta solo el shard correspondiente de las pruebas
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ matrix.shard - 1 }}
+            # CORRECCIÓN: Se envuelve la operación matemática en paréntesis para una correcta evaluación.
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ (matrix.shard - 1) }}
 
   # =================================================================
   # JOB 3: Publicar el APK final (solo en la rama main)
