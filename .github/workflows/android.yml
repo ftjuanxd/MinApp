@@ -26,8 +26,7 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      # CORRECCIÓN: Se corrigen los finales de línea del script gradlew
-      - name: 3. Fix gradlew line endings
+      - name: 3. Fix gradlew line endings (for Linux)
         run: sed -i 's/\r$//' ./gradlew
 
       - name: 4. Make gradlew executable
@@ -61,9 +60,9 @@ jobs:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      # CORRECCIÓN: Se corrigen los finales de línea también en este job
-      - name: 2. Fix gradlew line endings
-        run: sed -i 's/\r$//' ./gradlew
+      # CORRECCIÓN: La sintaxis de 'sed' en macOS (BSD) es diferente a la de Linux (GNU).
+      - name: 2. Fix gradlew line endings (for macOS)
+        run: sed -i '' 's/\r$//' ./gradlew
 
       - name: 3. Set shard index environment variable
         run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
