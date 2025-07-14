@@ -1,4 +1,4 @@
-name: Android CI/CD Pipeline
+name: Optimized Android CI/CD Pipeline
 
 on:
   push:
@@ -10,7 +10,10 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  # =================================================================
+  # JOB 1: Compilar, ejecutar pruebas unitarias y crear el APK
+  # =================================================================
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout code
@@ -23,64 +26,78 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: 3. Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          # Aceptar las licencias del SDK es una buena práctica para evitar fallos.
-          accept-android-sdk-licenses: true
-          # Se añaden los paquetes necesarios para el emulador.
-          packages: >
-            platform-tools
-            emulator
-            system-images;android-31;google_apis;x86_64
-
-      - name: 4. Fix gradlew line endings
-        run: sed -i 's/\r$//' ./gradlew
-
-      - name: 5. Make gradlew executable
+      - name: 3. Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: 6. Build and run unit tests
-        run: ./gradlew build testDebugUnitTest
+      - name: 4. Run unit tests and build APK
+        # Ejecuta las pruebas unitarias y empaqueta los APKs de debug y de prueba
+        run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest
 
-      - name: 7. Run Android instrumented tests
+      - name: 5. Upload APK artifacts
+        # Sube tanto el APK de la app como el APK de pruebas para que el siguiente job los use
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+  # =================================================================
+  # JOB 2: Ejecutar pruebas de instrumentación en paralelo
+  # =================================================================
+  test:
+    needs: build # Este job depende de que 'build' termine con éxito
+    runs-on: macos-latest # ¡IMPORTANTE! macos-latest tiene aceleración de hardware (KVM)
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4] # Crea 4 trabajos paralelos para las pruebas
+      fail-fast: false # Permite que todos los shards terminen aunque uno falle
+    
+    steps:
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
+
+      - name: 2. Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: apks
+          path: apks/
+
+      - name: 3. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
-          # CORRECCIÓN: Se especifica el 'target' y la 'arch' para que coincidan
-          # con la imagen del sistema instalada en el paso anterior.
           target: google_apis
           arch: x86_64
-          script: ./gradlew connectedCheck
+          # Activa la aceleración de hardware, la razón principal para usar macos-latest
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect
+          script: |
+            # Instala los APKs descargados
+            adb install apks/app-debug.apk
+            adb install apks/app-debug-androidTest.apk
+            # Ejecuta solo el shard correspondiente de las pruebas
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ matrix.shard - 1 }}
 
-  # Este job se ejecuta solo si 'build-and-test' es exitoso y estamos en la rama 'main'
-  publish-artifact:
-    needs: build-and-test
+  # =================================================================
+  # JOB 3: Publicar el APK final (solo en la rama main)
+  # =================================================================
+  publish-apk:
+    needs: build # Depende del job de 'build'
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: 1. Checkout code
-        uses: actions/checkout@v4
-
-      - name: 2. Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: 1. Download APK from build job
+        uses: actions/download-artifact@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
+          name: apks
+          path: apks/
 
-      - name: 3. Fix gradlew line endings
-        run: sed -i 's/\r$//' ./gradlew
+      - name: 2. Rename and prepare artifact for release
+        run: mv apks/app-debug.apk debug-apk.apk
 
-      - name: 4. Make gradlew executable
-        run: chmod +x ./gradlew
-      
-      - name: 5. Build APK
-        run: ./gradlew assembleDebug
-
-      - name: 6. Upload APK artifact
+      - name: 3. Upload final APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: debug-apk.apk
 
