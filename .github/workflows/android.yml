@@ -53,6 +53,10 @@ jobs:
         shard: [1, 2, 3, 4] # Crea 4 trabajos paralelos para las pruebas
       fail-fast: false # Permite que todos los shards terminen aunque uno falle
     
+    # CORRECCIÓN: Se calcula el índice en una variable de entorno para evitar errores de sintaxis.
+    env:
+      SHARD_INDEX: ${{ matrix.shard - 1 }}
+
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
@@ -75,9 +79,8 @@ jobs:
             # Instala los APKs descargados
             adb install apks/app-debug.apk
             adb install apks/app-debug-androidTest.apk
-            # Ejecuta solo el shard correspondiente de las pruebas
-            # CORRECCIÓN: Se envuelve la operación matemática en paréntesis para una correcta evaluación.
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ (matrix.shard - 1) }}
+            # Ejecuta solo el shard correspondiente de las pruebas usando la variable de entorno
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }}
 
   # =================================================================
   # JOB 3: Publicar el APK final (solo en la rama main)
