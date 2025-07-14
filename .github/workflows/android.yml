@@ -33,8 +33,8 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 5. Run unit tests and build APK
-        # Ejecuta las pruebas unitarias y empaqueta los APKs de debug y de prueba
-        run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest
+        # CORRECCIÓN: Se añade --no-daemon para mayor estabilidad en CI.
+        run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest --no-daemon
 
       - name: 6. Upload APK artifacts
         # Sube tanto el APK de la app como el APK de pruebas para que el siguiente job los use
@@ -63,7 +63,6 @@ jobs:
       - name: 2. Fix gradlew line endings (for macOS)
         run: sed -i '' 's/\r$//' ./gradlew
 
-      # CORRECCIÓN: Se añade el permiso de ejecución que faltaba en este job.
       - name: 3. Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -79,41 +78,4 @@ jobs:
       - name: 6. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 31
-          target: google_apis
-          arch: x86_64
-          # CORRECCIÓN: Se aumenta el tiempo de espera y se añaden flags de estabilidad.
-          emulator-boot-timeout: 600 # Aumenta el tiempo de espera a 10 minutos.
-          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: |
-            # CORRECCIÓN: Se añade una pequeña pausa para asegurar que el emulador esté estable.
-            sleep 15
-            # Instala los APKs descargados
-            adb install apks/app-debug.apk
-            adb install apks/app-debug-androidTest.apk
-            # Ejecuta solo el shard correspondiente de las pruebas usando la variable de entorno
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }}
-
-  # =================================================================
-  # JOB 3: Publicar el APK final (solo en la rama main)
-  # =================================================================
-  publish-apk:
-    needs: build # Depende del job de 'build'
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: 1. Download APK from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: apks
-          path: apks/
-
-      - name: 2. Rename and prepare artifact for release
-        run: mv apks/app-debug.apk debug-apk.apk
-
-      - name: 3. Upload final APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-apk
-          path: debug-apk.apk
-
+          api-le
