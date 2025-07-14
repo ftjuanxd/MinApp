@@ -60,28 +60,34 @@ jobs:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      # CORRECCIÓN: La sintaxis de 'sed' en macOS (BSD) es diferente a la de Linux (GNU).
       - name: 2. Fix gradlew line endings (for macOS)
         run: sed -i '' 's/\r$//' ./gradlew
 
-      - name: 3. Set shard index environment variable
+      # CORRECCIÓN: Se añade el permiso de ejecución que faltaba en este job.
+      - name: 3. Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: 4. Set shard index environment variable
         run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
 
-      - name: 4. Download APK artifacts
+      - name: 5. Download APK artifacts
         uses: actions/download-artifact@v4
         with:
           name: apks
           path: apks/
 
-      - name: 5. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+      - name: 6. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
           target: google_apis
           arch: x86_64
-          # Activa la aceleración de hardware, la razón principal para usar macos-latest
-          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect
+          # CORRECCIÓN: Se aumenta el tiempo de espera y se añaden flags de estabilidad.
+          emulator-boot-timeout: 600 # Aumenta el tiempo de espera a 10 minutos.
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           script: |
+            # CORRECCIÓN: Se añade una pequeña pausa para asegurar que el emulador esté estable.
+            sleep 15
             # Instala los APKs descargados
             adb install apks/app-debug.apk
             adb install apks/app-debug-androidTest.apk
