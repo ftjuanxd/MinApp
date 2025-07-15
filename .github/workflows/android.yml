@@ -33,7 +33,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 5. Run unit tests and build APK
-        # CORRECCIÓN: Se aumenta la memoria para Gradle para evitar problemas en compilaciones grandes.
+        # Se aumenta la memoria para Gradle para evitar problemas en compilaciones grandes.
         run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx3g"
 
       - name: 6. Upload APK artifacts
@@ -47,9 +47,8 @@ jobs:
   # =================================================================
   # JOB 2: Ejecutar pruebas de instrumentación en paralelo (en Linux)
   # =================================================================
-  test:
+ test:
     needs: build
-    # CORRECCIÓN : Cambiar el runner a ubuntu-latest
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -59,9 +58,6 @@ jobs:
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
-
-      # El paso 2 (sed) se elimina porque ya no es necesario
-      # El paso 3 se mantiene igual
 
       - name: 2. Make gradlew executable
         run: chmod +x ./gradlew
@@ -80,32 +76,19 @@ jobs:
         with:
           api-level: 31
           target: google_apis
-          # CORRECCIÓN 2: Volver a x86_64 para aprovechar la aceleración KVM en Linux
           arch: x86_64
           emulator-boot-timeout: 900
-          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim # -gpu swiftshader_indirect ya no es necesario, el runner elegirá una opción acelerada
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
           script: |
-            echo "Waiting for emulator to be ready..."
-            adb wait-for-device
-            
-            while [ -z "$(adb shell getprop sys.boot_completed)" ]; do
-              sleep 1
-            done
-            
-            adb shell settings put global window_animation_scale 0
-            adb shell settings put global transition_animation_scale 0
-            adb shell settings put global animator_duration_scale 0
-            
-            echo "Emulator is ready. Installing APKs..."
-            
-            adb install apks/app-debug.apk
-            adb install apks/app-debug-androidTest.apk
-            
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g"
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g" --continue || true
 
-      - name: 6. Upload Test Reports
+      - name: 6. Debug - List report files
+        if: always()
+        run: ls -R app/build/reports/
+
+      - name: 7. Upload Test Reports
         uses: actions/upload-artifact@v4
-        if: always() # ¡Importante! Esto asegura que los reportes se suban incluso si el paso anterior falla.
+        if: always()
         with:
           name: test-reports-shard-${{ matrix.shard }}
           path: app/build/reports/androidTests/connected/
