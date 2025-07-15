@@ -33,11 +33,10 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 5. Run unit tests and build APK
-        # Ejecuta las pruebas unitarias y empaqueta los APKs de debug y de prueba
-        run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest
+        # CORRECCIÓN: Se aumenta la memoria para Gradle para evitar problemas en compilaciones grandes.
+        run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx3g"
 
       - name: 6. Upload APK artifacts
-        # Sube tanto el APK de la app como el APK de pruebas para que el siguiente job los use
         uses: actions/upload-artifact@v4
         with:
           name: apks
@@ -49,12 +48,12 @@ jobs:
   # JOB 2: Ejecutar pruebas de instrumentación en paralelo
   # =================================================================
   test:
-    needs: build # Este job depende de que 'build' termine con éxito
-    runs-on: macos-latest # ¡IMPORTANTE! macos-latest tiene aceleración de hardware (KVM)
+    needs: build
+    runs-on: macos-latest
     strategy:
       matrix:
-        shard: [1, 2, 3, 4] # Crea 4 trabajos paralelos para las pruebas
-      fail-fast: false # Permite que todos los shards terminen aunque uno falle
+        shard: [1, 2, 3, 4]
+      fail-fast: false
     
     steps:
       - name: 1. Checkout code
@@ -63,7 +62,6 @@ jobs:
       - name: 2. Fix gradlew line endings (for macOS)
         run: sed -i '' 's/\r$//' ./gradlew
 
-      # CORRECCIÓN: Se añade el permiso de ejecución que faltaba en este job.
       - name: 3. Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -82,23 +80,38 @@ jobs:
           api-level: 31
           target: google_apis
           arch: x86_64
-          # CORRECCIÓN: Se aumenta el tiempo de espera y se añaden flags de estabilidad.
-          emulator-boot-timeout: 600 # Aumenta el tiempo de espera a 10 minutos.
-          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          # CORRECCIÓN: Se aumenta el tiempo de espera y se optimizan los recursos del emulador.
+          emulator-boot-timeout: 900 # Aumenta el tiempo de espera a 15 minutos.
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 3072 # Aumenta la RAM a 3GB.
           script: |
-            # CORRECCIÓN: Se añade una pequeña pausa para asegurar que el emulador esté estable.
-            sleep 15
+            # CORRECCIÓN: Se reemplaza la espera fija con un bucle que verifica activamente si el emulador está listo.
+            echo "Waiting for emulator to be ready..."
+            adb wait-for-device
+            
+            # Bucle para esperar a que el gestor de paquetes esté disponible.
+            while [ -z "$(adb shell getprop sys.boot_completed)" ]; do
+              sleep 1
+            done
+            
+            # Deshabilitar animaciones para mayor estabilidad en las pruebas.
+            adb shell settings put global window_animation_scale 0
+            adb shell settings put global transition_animation_scale 0
+            adb shell settings put global animator_duration_scale 0
+            
+            echo "Emulator is ready. Installing APKs..."
+            
             # Instala los APKs descargados
             adb install apks/app-debug.apk
             adb install apks/app-debug-androidTest.apk
-            # Ejecuta solo el shard correspondiente de las pruebas usando la variable de entorno
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }}
+            
+            # Ejecuta solo el shard correspondiente de las pruebas
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g"
 
   # =================================================================
   # JOB 3: Publicar el APK final (solo en la rama main)
   # =================================================================
   publish-apk:
-    needs: build # Depende del job de 'build'
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
