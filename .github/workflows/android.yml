@@ -49,7 +49,7 @@ jobs:
   # =================================================================
   test:
     needs: build
-    runs-on: macos-latest
+    runs-on: macos-latest # Se ejecuta en un runner ARM (aarch64)
     strategy:
       matrix:
         shard: [1, 2, 3, 4]
@@ -79,34 +79,31 @@ jobs:
         with:
           api-level: 31
           target: google_apis
-          arch: x86_64
-          # CORRECCIÓN: Se aumenta el tiempo de espera y se optimizan los recursos del emulador.
-          emulator-boot-timeout: 900 # Aumenta el tiempo de espera a 15 minutos.
-          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 3072 # Aumenta la RAM a 3GB.
+          # ============================================================
+          # CORRECCIÓN CLAVE: Cambiar la arquitectura a arm64-v8a
+          # ============================================================
+          arch: arm64-v8a
+          
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 3072
           script: |
-            # CORRECCIÓN: Se reemplaza la espera fija con un bucle que verifica activamente si el emulador está listo.
             echo "Waiting for emulator to be ready..."
             adb wait-for-device
             
-            # Bucle para esperar a que el gestor de paquetes esté disponible.
             while [ -z "$(adb shell getprop sys.boot_completed)" ]; do
               sleep 1
             done
             
-            # Deshabilitar animaciones para mayor estabilidad en las pruebas.
             adb shell settings put global window_animation_scale 0
             adb shell settings put global transition_animation_scale 0
             adb shell settings put global animator_duration_scale 0
             
             echo "Emulator is ready. Installing APKs..."
             
-            # Instala los APKs descargados
             adb install apks/app-debug.apk
             adb install apks/app-debug-androidTest.apk
             
-            # Ejecuta solo el shard correspondiente de las pruebas
             ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g"
-
   # =================================================================
   # JOB 3: Publicar el APK final (solo en la rama main)
   # =================================================================
