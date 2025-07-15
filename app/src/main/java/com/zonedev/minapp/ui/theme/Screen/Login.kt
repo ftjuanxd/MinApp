@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +40,7 @@ import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
+import com.zonedev.minapp.util.TestTags
 
 @Composable
 fun LoginApp(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
@@ -113,7 +115,8 @@ fun CustomLoginScreen(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
-            )
+            ),
+            text_Tag= TestTags.EMAIL_FIELD,
         )
 
         Space(16.dp)
@@ -127,32 +130,36 @@ fun CustomLoginScreen(auth: FirebaseAuth, onLoginSuccess: (String) -> Unit) {
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
-            )
+            ),
+            text_Tag=TestTags.PASSWORD_FIELD
         )
 
         Space(16.dp)
 
-        ButtonApp(stringResource(R.string.name_button_login)) {
-            if (email.isBlank() || password.isBlank()) {
-                // Muestra un mensaje de error si los campos están vacíos
-                errorMessage = R.string.Campos_Vacios_Login
-                showDialog = true
-            } else {
-                // Realiza la autenticación si ambos campos tienen valores
-                auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        auth.currentUser?.let { user ->
-                            onLoginSuccess(user.uid) // Pasa el userId de vuelta al MainActivity
+        ButtonApp(stringResource(R.string.name_button_login),
+            onClick = {
+                if (email.isBlank() || password.isBlank()) {
+                    // Muestra un mensaje de error si los campos están vacíos
+                    errorMessage = R.string.Campos_Vacios_Login
+                    showDialog = true
+                } else {
+                    // Realiza la autenticación si ambos campos tienen valores
+                    auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            auth.currentUser?.let { user ->
+                                onLoginSuccess(user.uid) // Pasa el userId de vuelta al MainActivity
+                            }
+                        } else {
+                            errorMessage = R.string.Parametros_Incorrectos_Login
+                            showDialog = true
+                            email = ""
+                            password = ""
                         }
-                    } else {
-                        errorMessage = R.string.Parametros_Incorrectos_Login
-                        showDialog = true
-                        email = ""
-                        password = ""
                     }
                 }
-            }
-        }
+            },
+            modifier = Modifier.testTag(TestTags.LOGIN_BUTTON)
+        )
 
         // Muestra el modal si showDialog es verdadero
         Modal(showDialog, { showDialog = false }, R.string.Title_Error, errorMessage, onClick = { showDialog = false })

@@ -8,7 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,6 +27,7 @@ import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.Components.Space
 import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
+import com.zonedev.minapp.util.TemplateTestTags
 
 @Composable
 fun Components_Template(
@@ -58,6 +61,7 @@ fun Components_Template(
         // ---  El texto del botón cambia y se deshabilita si está cargando ---
         text = if (isLoading) stringResource(R.string.enviando) else stringResource(R.string.button_submit),
         isEnabled = !isLoading,
+        modifier = Modifier.testTag(TemplateTestTags.SUBMIT_BUTTON),
         onClick = {
             val isIdInvalid = when (tipo_report) {
                 "Vehicular" -> {
@@ -168,6 +172,7 @@ fun Components_Template(
     // Diálogo de confirmación (cuando todo está bien)
     if (showConfirmationDialog) {
         Modal(
+            modifier = Modifier.testTag(TemplateTestTags.SUCCESS_MODAL),
             showDialog = showConfirmationDialog,
             onDismiss = { showConfirmationDialog = false },
             title = R.string.Name_Modal_Report,
@@ -179,6 +184,7 @@ fun Components_Template(
     // Modal unificado para todos los errores de validación ---
     if (showValidationErrorDialog) {
         Modal(
+            modifier = Modifier.testTag(TemplateTestTags.VALIDATION_ERROR_MODAL),
             showDialog = showValidationErrorDialog,
             onDismiss = { showValidationErrorDialog = false },
             title = validationErrorTitle,
@@ -201,11 +207,11 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
                 onDestinyChange(newValue)
             }
         },
-        isEnabled = true,
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
-        )
+        ),
+        text_Tag = TemplateTestTags.DESTINY_FIELD
     )
     Space()
     //TextField Authorization
@@ -218,11 +224,11 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
                 onAutoChange(newValue)
             }
         },
-        isEnabled = true,
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
-        )
+        ),
+        text_Tag = TemplateTestTags.AUTHORIZATION_FIELD
     )
     Space()
     //TextField Description
@@ -230,12 +236,12 @@ fun FieldsThemes(destiny:String,onDestinyChange: (String) -> Unit,auto:String,on
         value = descrip,
         label = stringResource(R.string.Label_Descripcion_Report),
         onValueChange = onDescripChange, // Para descripción, permitimos cualquier caracter
-        isEnabled = true,
-        KeyboardOptions.Default.copy(
+        keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Done,
         ),
-        pdHeight = 80.dp
+        pdHeight = 80.dp,
+        text_Tag = TemplateTestTags.DESCRIPTION_FIELD
     )
 }
 
@@ -275,11 +281,12 @@ fun Template_Text(
                     }
                 }
             },
-            visualTransformation = PlacaVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next,
-            )
+            ),
+            visualTransformation = PlacaVisualTransformation(),
+            text_Tag = TemplateTestTags.ID_FIELD
         )
     }else{
         CustomTextField(
@@ -292,7 +299,8 @@ fun Template_Text(
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next,
-            )
+            ),
+            text_Tag = TemplateTestTags.ID_FIELD
         )
     }
 
@@ -309,7 +317,8 @@ fun Template_Text(
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
-        )
+        ),
+        text_Tag = TemplateTestTags.NAME_FIELD
     )
 
     Space()

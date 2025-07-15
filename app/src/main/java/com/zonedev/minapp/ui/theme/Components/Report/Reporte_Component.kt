@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +60,7 @@ import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.primary
 import com.zonedev.minapp.ui.theme.text
+import com.zonedev.minapp.util.ReportViewTestTags
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -95,25 +97,24 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
                 }
             }
         } else {
-            // Si la lista tiene reportes, muestra los elementos de la página actual.
             items(
                 count = endIndex - startIndex,
-                // Proporcionar una clave única ayuda a Compose a optimizar el rendimiento
                 key = { index -> reportes[startIndex + index].hashCode() }
             ) { indexInPage ->
                 val reporte = reportes[startIndex + indexInPage]
                 val clave = obtenerClavePorTipo(reporte.tipo)
+                // Usamos el timestamp como parte del ID para asegurar unicidad en la prueba
+                val uniqueReportId = "${reporte.parametros[clave]}_${reporte.timestamp}"
                 Row(modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
                         selectedReporte = reporte
                         showDialog = true
                     }
+                    // Tag dinámico para poder encontrar una fila específica
+                    .testTag(ReportViewTestTags.reportRow(uniqueReportId))
                 ) {
-                    Text(
-                        text = obtenerParametro(reporte, clave),
-                        modifier = Modifier.padding(8.dp)
-                    )
+                    Text(text = obtenerParametro(reporte, clave), modifier = Modifier.padding(8.dp))
                 }
             }
         }
@@ -146,7 +147,8 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
             confirmButton = {
                 ButtonApp(
                     text = stringResource(R.string.Value_Button_Report),
-                    onClick = { showDialog = false }
+                    onClick = { showDialog = false },
+                    modifier = Modifier.testTag(ReportViewTestTags.DETAILS_MODAL_CLOSE_BUTTON)
                 )
             }
         )
@@ -193,9 +195,8 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             ButtonApp(
                 text = tipoFiltro,
                 iconButton = true,
-                onClick = {
-                    expandedTipo = true
-                }
+                onClick = {expandedTipo=true},
+                modifier = Modifier.testTag(ReportViewTestTags.DROPDOWN_BUTTON)
             )
 
             DropdownMenu(
@@ -204,6 +205,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
+                    .testTag(ReportViewTestTags.DROPDOWN_MENU)
             ) {
                 options.forEach { tipo ->
                     DropdownMenuItem(
@@ -211,7 +213,8 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                             tipoFiltro = tipo
                             expandedTipo = false
                         },
-                        text = { Text(text = tipo) }
+                        text = { Text(text = tipo) },
+                        modifier = Modifier.testTag(ReportViewTestTags.dropdownItem(tipo))
                     )
                 }
             }
@@ -225,11 +228,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                     value = nombreFiltro,
                     label = stringResource(R.string.Label_Filtro_Obs_Report),
                     onValueChange = { nombreFiltro = it },
-                    modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done,
-                    )
+                    ),
+                    text_Tag = ReportViewTestTags.OBSERVATION_TITLE_FILTER_FIELD
                 )
             }
             "Vehicular" -> {
@@ -248,7 +251,7 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done,
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    text_Tag = ReportViewTestTags.ID_FILTER_FIELD
                 )
                 Space()
                 // --- Filtro para Nombre (letras y espacios) ---
@@ -260,11 +263,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                             nombreFiltro = newValue
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done,
-                    )
+                    ),
+                    text_Tag = ReportViewTestTags.NAME_FILTER_FIELD,
                 )
             }
             "Personal", "Elemento" -> {
@@ -277,11 +280,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                             idFiltro = newValue
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Done,
-                    )
+                    ),
+                    text_Tag = ReportViewTestTags.ID_FILTER_FIELD
                 )
                 Space()
                 // --- Filtro para Nombre (letras y espacios) ---
@@ -293,11 +296,11 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                             nombreFiltro = newValue
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done,
-                    )
+                    ),
+                    text_Tag = ReportViewTestTags.NAME_FILTER_FIELD,
                 )
             }
         }
@@ -308,7 +311,8 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             label = stringResource(R.string.Label_Filtro_Fecha_Inicio_Report),
             selectedDate = fechaInicio,
             onDateSelected = { fechaInicio = it },
-            onDateCleared = { fechaInicio = null }
+            onDateCleared = { fechaInicio = null },
+            modifier = Modifier.testTag(ReportViewTestTags.START_DATE_FIELD)
         )
         Space()
 
@@ -316,7 +320,8 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             label = stringResource(R.string.Label_Filtro_Fecha_Fin_Report),
             selectedDate = fechaFin,
             onDateSelected = { fechaFin = it },
-            onDateCleared = { fechaFin = null }
+            onDateCleared = { fechaFin = null },
+            modifier = Modifier.testTag(ReportViewTestTags.END_DATE_FIELD)
         )
 
         Space(12.dp)

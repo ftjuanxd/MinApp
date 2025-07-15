@@ -58,6 +58,7 @@
     <string name="label_observations">Observaciones</string>
     <string name="Section_Upload_Files">Cargar Archivos</string>
     <string name="Label_Upload_Files">Evidencias</string>
+    <string name="Error_Network">Conexion a Internet Fallida</string>
 
     <!--Interfaz Reportes -->
 

@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -104,6 +105,7 @@ fun ButtonApp(
     iconButton: Boolean? = false,
     isEnabled: Boolean = true,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
@@ -120,6 +122,7 @@ fun ButtonApp(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = "Dropdown",
                 tint = Color.White,
+                modifier = modifier
             )
         }
     }
@@ -172,10 +175,10 @@ fun CustomTextField(
     @ColorRes iconTint: Int? = null,
     pdHeight: Dp? = null,
     onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
     isUser: Boolean? = null,
     isPasswordField: Boolean = false,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    text_Tag: String = "",
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -208,7 +211,8 @@ fun CustomTextField(
             .let { if (pdHeight != null) it.height(pdHeight) else it }
             .clickable {
                 onClick?.invoke()
-            },
+            }
+            .testTag(text_Tag),
         visualTransformation = if (isPasswordField && !passwordVisible) PasswordVisualTransformation() else visualTransformation,
         keyboardOptions = keyboardOptions,
         trailingIcon = {
@@ -249,7 +253,7 @@ fun CustomTextField(
 
 // Create Modal
 @Composable
-fun Modal(showDialog: Boolean, onDismiss: () -> Unit,  @StringRes title: Int, @StringRes Message: Int, @StringRes textButton: Int = R.string.Value_Button_Report, onClick: () -> Unit) {
+fun Modal(showDialog: Boolean, onDismiss: () -> Unit,  @StringRes title: Int, @StringRes Message: Int, @StringRes textButton: Int = R.string.Value_Button_Report, onClick: () -> Unit,modifier: Modifier=Modifier) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -274,7 +278,8 @@ fun Modal(showDialog: Boolean, onDismiss: () -> Unit,  @StringRes title: Int, @S
                     text = stringResource(textButton),
                     onClick = onClick,
                 )
-            }
+            },
+            modifier = modifier
         )
     }
 }
