@@ -103,6 +103,13 @@ jobs:
             
             ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g"
 
+      - name: 6. Upload Test Reports
+        uses: actions/upload-artifact@v4
+        if: always() # ¡Importante! Esto asegura que los reportes se suban incluso si el paso anterior falla.
+        with:
+          name: test-reports-shard-${{ matrix.shard }}
+          path: app/build/reports/androidTests/connected/
+
   # =================================================================
   # JOB 3: Publicar el APK final (solo en la rama main)
   # =================================================================
