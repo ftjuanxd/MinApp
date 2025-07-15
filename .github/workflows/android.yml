@@ -45,11 +45,12 @@ jobs:
             app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
   # =================================================================
-  # JOB 2: Ejecutar pruebas de instrumentación en paralelo
+  # JOB 2: Ejecutar pruebas de instrumentación en paralelo (en Linux)
   # =================================================================
   test:
     needs: build
-    runs-on: macos-latest # Se ejecuta en un runner ARM (aarch64)
+    # CORRECCIÓN : Cambiar el runner a ubuntu-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         shard: [1, 2, 3, 4]
@@ -59,33 +60,30 @@ jobs:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 2. Fix gradlew line endings (for macOS)
-        run: sed -i '' 's/\r$//' ./gradlew
+      # El paso 2 (sed) se elimina porque ya no es necesario
+      # El paso 3 se mantiene igual
 
-      - name: 3. Make gradlew executable
+      - name: 2. Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: 4. Set shard index environment variable
+      - name: 3. Set shard index environment variable
         run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
 
-      - name: 5. Download APK artifacts
+      - name: 4. Download APK artifacts
         uses: actions/download-artifact@v4
         with:
           name: apks
           path: apks/
 
-      - name: 6. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+      - name: 5. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
           target: google_apis
-          # ============================================================
-          # CORRECCIÓN CLAVE: Cambiar la arquitectura a arm64-v8a
-          # ============================================================
-          arch: arm64-v8a
-          
+          # CORRECCIÓN 2: Volver a x86_64 para aprovechar la aceleración KVM en Linux
+          arch: x86_64
           emulator-boot-timeout: 900
-          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 3072
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim # -gpu swiftshader_indirect ya no es necesario, el runner elegirá una opción acelerada
           script: |
             echo "Waiting for emulator to be ready..."
             adb wait-for-device
@@ -104,6 +102,7 @@ jobs:
             adb install apks/app-debug-androidTest.apk
             
             ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g"
+
   # =================================================================
   # JOB 3: Publicar el APK final (solo en la rama main)
   # =================================================================
