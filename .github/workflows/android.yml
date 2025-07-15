@@ -1,0 +1,112 @@
+name: Optimized Android CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - 'sprint-*/*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # =================================================================
+  # JOB 1: Compilar, ejecutar pruebas unitarias y crear el APK
+  # =================================================================
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
+
+      - name: 2. Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 3. Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: 4. Run unit tests and build APK
+        run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx3g"
+
+      - name: 5. Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+  # =================================================================
+  # JOB 2: Ejecutar pruebas de instrumentación en paralelo (en Linux)
+  # =================================================================
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4]
+      fail-fast: false
+    steps:
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
+
+      - name: 2. Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: 3. Set shard index environment variable
+        run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
+
+      - name: 4. Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: apks
+          path: apks/
+
+      - name: 5. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
+          script: |
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g" --continue || true
+
+      - name: 6. Debug - List report files
+        if: always()
+        run: ls -R app/build/reports/
+
+      - name: 7. Upload Test Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-shard-${{ matrix.shard }}
+          path: app/build/reports/androidTests/connected/
+
+  # =================================================================
+  # JOB 3: Publicar el APK final (solo en la rama main)
+  # =================================================================
+  publish-apk:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: 1. Download APK from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: apks
+          path: apks/
+
+      - name: 2. Rename and prepare artifact for release
+        run: mv apks/app-debug.apk debug-apk.apk
+
+      - name: 3. Upload final APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: debug-apk.apk
