@@ -26,17 +26,13 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: 3. Fix gradlew line endings (for Linux)
-        run: sed -i 's/\r$//' ./gradlew
-
-      - name: 4. Make gradlew executable
+      - name: 3. Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: 5. Run unit tests and build APK
-        # Se aumenta la memoria para Gradle para evitar problemas en compilaciones grandes.
+      - name: 4. Run unit tests and build APK
         run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx3g"
 
-      - name: 6. Upload APK artifacts
+      - name: 5. Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: apks
@@ -47,14 +43,13 @@ jobs:
   # =================================================================
   # JOB 2: Ejecutar pruebas de instrumentación en paralelo (en Linux)
   # =================================================================
- test:
+  test:
     needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         shard: [1, 2, 3, 4]
       fail-fast: false
-    
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
@@ -115,4 +110,3 @@ jobs:
         with:
           name: debug-apk
           path: debug-apk.apk
-
