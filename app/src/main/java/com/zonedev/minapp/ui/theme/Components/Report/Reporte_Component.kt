@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -66,11 +67,12 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.min
-
 @Composable
 fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
     val startIndex = (currentPage - 1) * itemsPerPage
     val endIndex = min(startIndex + itemsPerPage, reportes.size)
+    val reportesEnPagina = if (startIndex <= endIndex) reportes.subList(startIndex, endIndex) else emptyList()
+
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
@@ -79,15 +81,17 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(ReportViewTestTags.REPORT_LIST_CONTAINER) // Tag para el contenedor de la lista
             .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
     ) {
-        if (reportes.isEmpty()) {
+        if (reportesEnPagina.isEmpty()) {
             // Si la lista está vacía, muestra el mensaje.
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .testTag(ReportViewTestTags.EMPTY_LIST_MESSAGE), // Tag para el mensaje de lista vacía
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -98,13 +102,11 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
             }
         } else {
             items(
-                count = endIndex - startIndex,
-                key = { index -> reportes[startIndex + index].hashCode() }
-            ) { indexInPage ->
-                val reporte = reportes[startIndex + indexInPage]
+                items = reportesEnPagina,
+                key = { reporte -> reporte.hashCode() } // Clave única para cada elemento
+            ) { reporte ->
                 val clave = obtenerClavePorTipo(reporte.tipo)
-                // Usamos el timestamp como parte del ID para asegurar unicidad en la prueba
-                val uniqueReportId = "${reporte.parametros[clave]}_${reporte.timestamp}"
+                val nombreMostrado = obtenerParametro(reporte, clave)
                 Row(modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
@@ -112,9 +114,9 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
                         showDialog = true
                     }
                     // Tag dinámico para poder encontrar una fila específica
-                    .testTag(ReportViewTestTags.reportRow(uniqueReportId))
+                    .testTag(ReportViewTestTags.reportRow(nombreMostrado))
                 ) {
-                    Text(text = obtenerParametro(reporte, clave), modifier = Modifier.padding(8.dp))
+                    Text(text = nombreMostrado, modifier = Modifier.padding(8.dp))
                 }
             }
         }
@@ -150,11 +152,12 @@ fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int)
                     onClick = { showDialog = false },
                     modifier = Modifier.testTag(ReportViewTestTags.DETAILS_MODAL_CLOSE_BUTTON)
                 )
-            }
+            },
+            // Se añade el testTag que faltaba en el modal
+            modifier = Modifier.testTag(ReportViewTestTags.DETAILS_MODAL)
         )
     }
 }
-
 @Composable
 fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewModel()) {
     var selectedOption by remember { mutableStateOf("Personal") }

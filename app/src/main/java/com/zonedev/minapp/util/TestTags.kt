@@ -43,4 +43,5 @@ object ReportViewTestTags {
 
     const val DETAILS_MODAL = "ReportDetailsModal"
     const val DETAILS_MODAL_CLOSE_BUTTON = "DetailsModalCloseButton"
+
 }

@@ -40,12 +40,11 @@ jobs:
             app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
   # =================================================================
-  # JOB 2: Ejecutar pruebas de instrumentación en paralelo
+  # JOB 2: Ejecutar pruebas de instrumentación en paralelo (en Linux con KVM)
   # =================================================================
   test:
     needs: build
-    # Se cambia a macos-latest para usar la aceleración de hardware y evitar que el emulador falle.
-    runs-on: macos-latest 
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         shard: [1, 2, 3, 4]
@@ -59,9 +58,6 @@ jobs:
 
       - name: 3. Set shard index environment variable
         run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
-
-      # Nota: El APK de la app y el de las pruebas ya no se descargan porque 
-      # el checkout del código y la ejecución de gradle los manejarán en un entorno estable.
       
       - name: 4. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
@@ -69,6 +65,7 @@ jobs:
           api-level: 31
           target: google_apis
           arch: x86_64
+          enable-kvm: true 
           emulator-boot-timeout: 900
           emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
           script: |
@@ -99,7 +96,7 @@ jobs:
           name: apks
           path: apks/
 
-      # Se corrige la ruta del archivo APK. Los artefactos conservan parte de su estructura de directorios.
+      # La ruta correcta debe considerar la estructura de directorios del artefacto.
       - name: 2. Rename and prepare artifact for release
         run: mv apks/debug/app-debug.apk debug-apk.apk
 
@@ -108,3 +105,4 @@ jobs:
         with:
           name: debug-apk
           path: debug-apk.apk
+
