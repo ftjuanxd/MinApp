@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'sprint-*/*'
   pull_request:
     branches:
       - main
@@ -29,7 +28,7 @@ jobs:
       - name: 3. Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: 4. Run unit tests and build APK
+      - name: 4. Run unit tests and build APKs
         run: ./gradlew testDebugUnitTest assembleDebug assembleDebugAndroidTest -Dorg.gradle.jvmargs="-Xmx3g"
 
       - name: 5. Upload APK artifacts
@@ -41,11 +40,12 @@ jobs:
             app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
   # =================================================================
-  # JOB 2: Ejecutar pruebas de instrumentación en paralelo (en Linux)
+  # JOB 2: Ejecutar pruebas de instrumentación en paralelo
   # =================================================================
   test:
     needs: build
-    runs-on: ubuntu-latest
+    # Se cambia a macos-latest para usar la aceleración de hardware y evitar que el emulador falle.
+    runs-on: macos-latest 
     strategy:
       matrix:
         shard: [1, 2, 3, 4]
@@ -60,13 +60,10 @@ jobs:
       - name: 3. Set shard index environment variable
         run: echo "SHARD_INDEX=$((${{ matrix.shard }} - 1))" >> $GITHUB_ENV
 
-      - name: 4. Download APK artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: apks
-          path: apks/
-
-      - name: 5. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+      # Nota: El APK de la app y el de las pruebas ya no se descargan porque 
+      # el checkout del código y la ejecución de gradle los manejarán en un entorno estable.
+      
+      - name: 4. Run Android instrumented tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
@@ -77,11 +74,11 @@ jobs:
           script: |
             ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g" --continue || true
 
-      - name: 6. Debug - List report files
+      - name: 5. Debug - List report files
         if: always()
         run: ls -R app/build/reports/
 
-      - name: 7. Upload Test Reports
+      - name: 6. Upload Test Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -102,8 +99,9 @@ jobs:
           name: apks
           path: apks/
 
+      # Se corrige la ruta del archivo APK. Los artefactos conservan parte de su estructura de directorios.
       - name: 2. Rename and prepare artifact for release
-        run: mv apks/app-debug.apk debug-apk.apk
+        run: mv apks/debug/app-debug.apk debug-apk.apk
 
       - name: 3. Upload final APK artifact
         uses: actions/upload-artifact@v4
