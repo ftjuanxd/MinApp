@@ -20,6 +20,7 @@
     <string name="Label_name_Input_password">Contraseña</string>
     <string name="Campos_Vacios_Login">Los Campos de Correo Electronico y Contraseña son obligatorios. Por favor, completa ambos campos.</string>
     <string name="Parametros_Incorrectos_Login">Los datos de usuario son incorrectos. Por favor, inténtalo de nuevo.</string>
+
     <!--Profile Screen-->
     <string name="Descripcion_profileScreen_Image">Imagen de perfil</string>
     <string name="Error_Image">Error loading image</string>
@@ -35,6 +36,7 @@
     <string name="Label_Phone_Profile">Phone</string>
     <string name="Label_ID_Profile">N° Id</string>
     <string name="Label_Rh_Profile">Rh</string>
+    <string name="puesto_trabajo">Puesto de Trabajo</string>
 
     <!--Minutas-->
     <string name="Type_Report_Element">Elemento</string>
@@ -87,6 +89,5 @@
     <string name="Value_Button_Date_No">Cancelar</string>
     <string name="Value_Pagination_Previo">Previo</string>
     <string name="Value_Pagination_Siguiente">Siguiente</string>
-
 
 </resources>
