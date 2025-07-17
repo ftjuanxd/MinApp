@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Components.Report
+package com.zonedev.minapp.ui.Components.Report
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -37,7 +37,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
-import com.zonedev.minapp.ui.theme.Model.Reporte
+import com.zonedev.minapp.Model.Reporte
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -160,6 +160,12 @@ fun MostrarReporte(reporte: Reporte, tipo: String) {
                 is List<*> -> allImageUrls.addAll(value.filterIsInstance<String>())
                 else -> {}
             }
+        }
+
+        if (reporte.guardiaNombre.isNotEmpty()) {
+            Text(
+                text = "Reportado por: ${reporte.guardiaNombre}",
+            )
         }
 
         // Mostrar los parámetros de texto

@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Templates
+package com.zonedev.minapp.ui.Templates
 
 import android.net.Uri
 import android.widget.Toast
@@ -17,16 +17,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.Components.ButtonApp
-import com.zonedev.minapp.ui.theme.Components.CheckHold
-import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.ImagePicker
-import com.zonedev.minapp.ui.theme.Components.Modal
-import com.zonedev.minapp.ui.theme.Components.PlacaVisualTransformation
-import com.zonedev.minapp.ui.theme.Components.Report.crearParametrosParaReporte
-import com.zonedev.minapp.ui.theme.Components.Separator
-import com.zonedev.minapp.ui.theme.Components.Space
-import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
+import com.zonedev.minapp.ViewModel.ReporteViewModel
+import com.zonedev.minapp.ui.Components.ButtonApp
+import com.zonedev.minapp.ui.Components.CustomTextField
+import com.zonedev.minapp.ui.Components.ImagePicker
+import com.zonedev.minapp.ui.Components.Modal
+import com.zonedev.minapp.ui.Components.PlacaVisualTransformation
+import com.zonedev.minapp.ui.Components.Report.crearParametrosParaReporte
+import com.zonedev.minapp.ui.Components.Separator
+import com.zonedev.minapp.ui.Components.Space
+import com.zonedev.minapp.ui.Components.checkHold
 import com.zonedev.minapp.util.TemplateTestTags
 
 @Composable
@@ -53,7 +53,7 @@ fun Components_Template(
 
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val holdCheckState = CheckHold()
+    val holdCheckState = checkHold()
 
     FieldsThemes(destiny, { destiny = it }, auto, { auto = it }, descrip, { descrip = it })
 

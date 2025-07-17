@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Components
+package com.zonedev.minapp.ui.Components
 
 
 import androidx.annotation.ColorRes

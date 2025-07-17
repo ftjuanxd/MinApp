@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Screen
+package com.zonedev.minapp.ui.Screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,12 +23,11 @@ import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.Components.ButtonApp
-import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.Modal
-import com.zonedev.minapp.ui.theme.Components.Separator
-import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
-import com.zonedev.minapp.ui.theme.ViewModel.Puesto_TrabajoViewModel
+import com.zonedev.minapp.ViewModel.GuardiaViewModel
+import com.zonedev.minapp.ui.Components.ButtonApp
+import com.zonedev.minapp.ui.Components.CustomTextField
+import com.zonedev.minapp.ui.Components.Modal
+import com.zonedev.minapp.ui.Components.Separator
 
 @Composable
 fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
@@ -36,7 +35,7 @@ fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
 }
 
 @Composable
-fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel(), puestoViewModel: Puesto_TrabajoViewModel = viewModel()){
+fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
 
     var showDialog by remember { mutableStateOf(false) }
     val guardia by guardiaViewModel.listaGuardias.collectAsState()
@@ -49,8 +48,8 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel(), 
                 model = imageUrl,
                 contentDescription = stringResource(R.string.Descripcion_profileScreen_Image),
                 modifier = Modifier
-                    .size(160.dp)
-                    .padding(bottom = 24.dp)
+                    .size(200.dp)
+                    .padding(bottom = 18.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             ) {

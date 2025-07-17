@@ -17,9 +17,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.zonedev.minapp.ui.theme.MinappTheme
-import com.zonedev.minapp.ui.theme.Screen.LoginApp
-import com.zonedev.minapp.ui.theme.Templates.BaseScreen
-import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
+import com.zonedev.minapp.ui.Screen.LoginApp
+import com.zonedev.minapp.ui.Templates.BaseScreen
+import com.zonedev.minapp.ViewModel.GuardiaViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

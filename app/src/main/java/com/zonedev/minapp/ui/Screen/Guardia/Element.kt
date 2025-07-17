@@ -1,7 +1,7 @@
-package com.zonedev.minapp.ui.theme.Screen.Guardia
+package com.zonedev.minapp.ui.Screen.Guardia
 
 import androidx.compose.runtime.Composable
-import com.zonedev.minapp.ui.theme.Templates.Template_Text
+import com.zonedev.minapp.ui.Templates.Template_Text
 
 @Composable
 fun Element(guardiaId: String) {
