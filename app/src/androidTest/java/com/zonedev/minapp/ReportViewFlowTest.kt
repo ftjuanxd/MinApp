@@ -57,8 +57,9 @@ class ReportViewFlowTest {
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             composeTestRule.onAllNodesWithText(nombreDePrueba).fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithText(nombreDePrueba).assertExists()
-        composeTestRule.onNodeWithText(nombreDePrueba).performClick()
+
+        // Se hace clic directamente en la fila usando su testTag, que es más fiable.
+        composeTestRule.onNodeWithTag(ReportViewTestTags.reportRow(nombreDePrueba)).performClick()
 
         // --- VERIFICACIÓN ---
         composeTestRule.onNodeWithTag(ReportViewTestTags.DETAILS_MODAL).assertIsDisplayed()

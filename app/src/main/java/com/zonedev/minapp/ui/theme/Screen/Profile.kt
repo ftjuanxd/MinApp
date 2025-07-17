@@ -28,6 +28,7 @@ import com.zonedev.minapp.ui.theme.Components.CustomTextField
 import com.zonedev.minapp.ui.theme.Components.Modal
 import com.zonedev.minapp.ui.theme.Components.Separator
 import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
+import com.zonedev.minapp.ui.theme.ViewModel.Puesto_TrabajoViewModel
 
 @Composable
 fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
@@ -35,10 +36,11 @@ fun ProfileScreen(viewModel: GuardiaViewModel = viewModel()) {
 }
 
 @Composable
-fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
+fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel(), puestoViewModel: Puesto_TrabajoViewModel = viewModel()){
 
     var showDialog by remember { mutableStateOf(false) }
     val guardia by guardiaViewModel.listaGuardias.collectAsState()
+    val puestoNombre by guardiaViewModel.nombrePuesto.collectAsState()
 
     // Imagen de perfil usando Coil
     guardia.firstOrNull()?.image?.let { imageUrl ->
@@ -90,6 +92,12 @@ fun Components_Profile_Screen(guardiaViewModel: GuardiaViewModel = viewModel()){
     CustomTextField(
         value = guardia.firstOrNull()?.name ?: stringResource(R.string.Dato_No_Obtenido),
         label = stringResource(R.string.Label_Name_Profile),
+        onValueChange = {},
+        isEnabled = false,
+    )
+    CustomTextField(
+        value = puestoNombre,
+        label = stringResource(R.string.puesto_trabajo),
         onValueChange = {},
         isEnabled = false,
     )

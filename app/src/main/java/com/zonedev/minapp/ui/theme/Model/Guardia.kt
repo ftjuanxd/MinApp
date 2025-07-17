@@ -6,13 +6,15 @@ data class Guardia(
     val phone: String = "",
     var id: String = "",
     val rh: String = "",
+    val puestoId: String = ""
 ) {
-    fun toMap(): Map<String, String> {
+    fun toMap(): Map<String, Any> {
         return mapOf(
             "image" to image,
             "name" to name,
             "phone" to phone,
-            "rh" to rh
+            "rh" to rh,
+            "puestoId" to puestoId,
         )
     }
 }
