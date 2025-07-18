@@ -1,6 +1,7 @@
 package com.zonedev.minapp
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,10 +17,11 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.zonedev.minapp.ui.theme.MinappTheme
+import com.zonedev.minapp.ViewModel.GuardiaViewModel
 import com.zonedev.minapp.ui.Screen.LoginApp
 import com.zonedev.minapp.ui.Templates.BaseScreen
-import com.zonedev.minapp.ViewModel.GuardiaViewModel
+import com.zonedev.minapp.ui.theme.MinappTheme
+import com.zonedev.minapp.util.NetworkUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -34,6 +36,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         auth = Firebase.auth
         guardiaViewModel = GuardiaViewModel()
+
+        // Se verifica la conexión antes de continuar.
+        if (!NetworkUtils.isNetworkAvailable(this)) {
+            // Muestra un mensaje al usuario.
+            Toast.makeText(this, getString(R.string.Error_Network), Toast.LENGTH_LONG).show()
+            // Cierra la aplicación por completo.
+            finishAffinity()
+            // Detiene la ejecución del método onCreate.
+            return
+        }
 
         //Variable de control de visibilidad de la pantalla de Splash
         var keepSplashOnScreen = true

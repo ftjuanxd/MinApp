@@ -136,7 +136,7 @@ fun checkHold(): MutableState<Boolean> {
     // Contenedor con el Checkbox y un Text para mostrar el estado
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(end = 190.dp)
+        modifier = Modifier.padding(end = 120.dp, start = 5.dp)
     ) {
         Box(
             modifier = Modifier

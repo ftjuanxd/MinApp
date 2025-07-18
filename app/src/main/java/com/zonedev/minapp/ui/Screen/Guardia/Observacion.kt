@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zonedev.minapp.R
+import com.zonedev.minapp.ViewModel.ReporteViewModel
 import com.zonedev.minapp.ui.Components.ButtonApp
 import com.zonedev.minapp.ui.Components.CustomTextField
 import com.zonedev.minapp.ui.Components.ImagePicker
@@ -25,7 +26,6 @@ import com.zonedev.minapp.ui.Components.Modal
 import com.zonedev.minapp.ui.Components.Report.crearParametrosParaReporte
 import com.zonedev.minapp.ui.Components.Separator
 import com.zonedev.minapp.ui.Components.Space
-import com.zonedev.minapp.ViewModel.ReporteViewModel
 import com.zonedev.minapp.util.ObservationsTestTags
 
 @Composable
@@ -51,7 +51,7 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
             allowMultiple = true
         )
 
-        Space()
+        Space(4.dp)
 
         CustomTextField(
             value = subject,
@@ -71,7 +71,7 @@ fun Components_Observations(guardiaId: String, reporteViewModel: ReporteViewMode
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Done,
             ),
-            pdHeight = 200.dp,
+            pdHeight = 180.dp,
             text_Tag= ObservationsTestTags.OBSERVATION_FIELD
         )
 

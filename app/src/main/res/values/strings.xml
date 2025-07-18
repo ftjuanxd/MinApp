@@ -8,6 +8,7 @@
     <string name="Error_ID_Debe_Ser_Numero">El ID debe ser un número</string>
     <string name="Error_Campos_Debe_Ser_Texto">Los campos de texto deben contener solo letras y espacios</string>
     <string name="enviando">Enviando</string>>
+    <string name="Error_Network">Conexion a Internet Fallida</string>
 
     <!--Login Screen-->
     <string name="blob_ui_text">BIENVENIDO</string>
@@ -60,7 +61,6 @@
     <string name="label_observations">Observaciones</string>
     <string name="Section_Upload_Files">Cargar Archivos</string>
     <string name="Label_Upload_Files">Evidencias</string>
-    <string name="Error_Network">Conexion a Internet Fallida</string>
 
     <!--Interfaz Reportes -->
 

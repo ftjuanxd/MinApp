@@ -5,8 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -70,97 +70,6 @@ import java.util.TimeZone
 import kotlin.math.min
 
 @Composable
-fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
-    val startIndex = (currentPage - 1) * itemsPerPage
-    val endIndex = min(startIndex + itemsPerPage, reportes.size)
-    val reportesEnPagina = if (startIndex <= endIndex) reportes.subList(startIndex, endIndex) else emptyList()
-
-
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
-
-    // Se usa LazyColumn para hacer la lista desplazable y eficiente ---
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(ReportViewTestTags.REPORT_LIST_CONTAINER) // Tag para el contenedor de la lista
-            .border(2.dp, color_component, shape = RoundedCornerShape(8.dp))
-    ) {
-        if (reportesEnPagina.isEmpty()) {
-            // Si la lista está vacía, muestra el mensaje.
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .testTag(ReportViewTestTags.EMPTY_LIST_MESSAGE), // Tag para el mensaje de lista vacía
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.Mensaje_Reporte_No_Encontrado),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            items(
-                items = reportesEnPagina,
-                key = { reporte -> reporte.hashCode() } // Clave única para cada elemento
-            ) { reporte ->
-                val clave = obtenerClavePorTipo(reporte.tipo)
-                val nombreMostrado = obtenerParametro(reporte, clave)
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        selectedReporte = reporte
-                        showDialog = true
-                    }
-                    // Tag dinámico para poder encontrar una fila específica
-                    .testTag(ReportViewTestTags.reportRow(nombreMostrado))
-                ) {
-                    Text(text = nombreMostrado, modifier = Modifier.padding(8.dp))
-                }
-            }
-        }
-    }
-
-    // El modal de detalles no cambia y funciona igual.
-    if (showDialog && selectedReporte != null) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(
-                text = stringResource(R.string.Titulo_Modal_Reporte),
-                color= color_component,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 30.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-            ) },
-            text = {
-                selectedReporte?.let { reporte ->
-                    // Usamos LazyColumn aquí también por si el detalle es muy largo
-                    LazyColumn {
-                        item {
-                            MostrarReporte(reporte, reporte.tipo)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                ButtonApp(
-                    text = stringResource(R.string.Value_Button_Report),
-                    onClick = { showDialog = false },
-                    modifier = Modifier.testTag(ReportViewTestTags.DETAILS_MODAL_CLOSE_BUTTON)
-                )
-            },
-            // Se añade el testTag que faltaba en el modal
-            modifier = Modifier.testTag(ReportViewTestTags.DETAILS_MODAL)
-        )
-    }
-}
-@Composable
 fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewModel()) {
     var selectedOption by remember { mutableStateOf("Personal") }
     val options = listOf("Personal", "Vehicular", "Elemento", "Observacion")
@@ -175,12 +84,19 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
     var guardiasDelPuesto by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var filtroGuardiaId by remember { mutableStateOf<String?>(null) }
     var nombreGuardiaSeleccionado by remember { mutableStateOf("Todos los guardias") }
+    // Variables para las paginas de los reportes
+    var currentPage by remember { mutableStateOf(1) }
+    val itemsPerPage = 10
+    // Variables de Estado para el muestreo del contenido de los reportes
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedReporte by remember { mutableStateOf<Reporte?>(null) }
 
     LaunchedEffect(tipoFiltro) {
         idFiltro = ""
         nombreFiltro = ""
         fechaInicio = null
         fechaFin = null
+        currentPage = 1
     }
 
     LaunchedEffect(guardiaId) {
@@ -197,197 +113,264 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
             fechaFin = fechaFin,
             filtroGuardiaId = filtroGuardiaId
         )
+        currentPage = 1
     }
+    Box(modifier = Modifier.fillMaxSize()){
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(10.dp),horizontalAlignment = Alignment.CenterHorizontally) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    var expandedTipo by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(10.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            var expandedTipo by remember { mutableStateOf(false) }
+                    ButtonApp(
+                        text = tipoFiltro,
+                        iconButton = true,
+                        onClick = { expandedTipo = true },
+                        modifier = Modifier.testTag(ReportViewTestTags.DROPDOWN_BUTTON)
+                    )
 
-            ButtonApp(
-                text = tipoFiltro,
-                iconButton = true,
-                onClick = {expandedTipo=true},
-                modifier = Modifier.testTag(ReportViewTestTags.DROPDOWN_BUTTON)
-            )
+                    DropdownMenu(
+                        expanded = expandedTipo,
+                        onDismissRequest = { expandedTipo = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .testTag(ReportViewTestTags.DROPDOWN_MENU)
+                    ) {
+                        options.forEach { tipo ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    tipoFiltro = tipo
+                                    expandedTipo = false
+                                },
+                                text = { Text(text = tipo) },
+                                modifier = Modifier.testTag(ReportViewTestTags.dropdownItem(tipo))
+                            )
+                        }
+                    }
+                }
 
-            DropdownMenu(
-                expanded = expandedTipo,
-                onDismissRequest = { expandedTipo = false },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .testTag(ReportViewTestTags.DROPDOWN_MENU)
-            ) {
-                options.forEach { tipo ->
-                    DropdownMenuItem(
-                        onClick = {
-                            tipoFiltro = tipo
-                            expandedTipo = false
-                        },
-                        text = { Text(text = tipo) },
-                        modifier = Modifier.testTag(ReportViewTestTags.dropdownItem(tipo))
+                Space()
+            }
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    var expandedGuardias by remember { mutableStateOf(false) }
+
+                    ButtonApp(
+                        text = nombreGuardiaSeleccionado,
+                        iconButton = true,
+                        onClick = { expandedGuardias = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = expandedGuardias,
+                        onDismissRequest = { expandedGuardias = false },
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    ) {
+                        // Opción para limpiar el filtro y ver todos los reportes
+                        DropdownMenuItem(
+                            onClick = {
+                                filtroGuardiaId = null
+                                nombreGuardiaSeleccionado = "Todos los guardias"
+                                expandedGuardias = false
+                            },
+                            text = { Text(text = "Todos los guardias") }
+                        )
+                        // Opciones para cada guardia en el puesto
+                        guardiasDelPuesto.forEach { (id, nombre) ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    filtroGuardiaId = id
+                                    nombreGuardiaSeleccionado = nombre
+                                    expandedGuardias = false
+                                },
+                                text = { Text(text = nombre) }
+                            )
+                        }
+                    }
+                }
+                Space()
+            }
+            item {
+                when (tipoFiltro) {
+                    "Observacion" -> {
+                        CustomTextField(
+                            value = nombreFiltro,
+                            label = stringResource(R.string.Label_Filtro_Obs_Report),
+                            onValueChange = { nombreFiltro = it },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Done,
+                            ),
+                            text_Tag = ReportViewTestTags.OBSERVATION_TITLE_FILTER_FIELD
+                        )
+                    }
+
+                    "Vehicular" -> {
+                        // Filtro para Placa: Acepta letras, números y guiones.
+                        CustomTextField(
+                            value = idFiltro,
+                            label = stringResource(R.string.Label_Filtro_Veh_Report),
+                            onValueChange = { newValue ->
+                                // Esta validación asegura que el String `idFiltro` solo contenga
+                                // los caracteres permitidos para una placa.
+                                if (newValue.all { it.isLetterOrDigit() || it == '-' }) {
+                                    idFiltro = newValue.lowercase()
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Done,
+                            ),
+                            text_Tag = ReportViewTestTags.ID_FILTER_FIELD
+                        )
+                        Space()
+                        // --- Filtro para Nombre (letras y espacios) ---
+                        CustomTextField(
+                            value = nombreFiltro,
+                            label = stringResource(R.string.Label_Filtro_User_Name_Report),
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                                    nombreFiltro = newValue
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Done,
+                            ),
+                            text_Tag = ReportViewTestTags.NAME_FILTER_FIELD,
+                        )
+                    }
+
+                    "Personal", "Elemento" -> {
+                        // Filtro para ID: Acepta solo números.
+                        CustomTextField(
+                            value = idFiltro,
+                            label = stringResource(R.string.Label_Filtro_User_ID_Report),
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() }) {
+                                    idFiltro = newValue
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done,
+                            ),
+                            text_Tag = ReportViewTestTags.ID_FILTER_FIELD
+                        )
+                        Space()
+                        // --- Filtro para Nombre (letras y espacios) ---
+                        CustomTextField(
+                            value = nombreFiltro,
+                            label = stringResource(R.string.Label_Filtro_User_Name_Report),
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                                    nombreFiltro = newValue
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Done,
+                            ),
+                            text_Tag = ReportViewTestTags.NAME_FILTER_FIELD,
+                        )
+                    }
+                }
+                Space()
+            }
+            item {
+                ModernDatePickerTextField(
+                    label = stringResource(R.string.Label_Filtro_Fecha_Inicio_Report),
+                    selectedDate = fechaInicio,
+                    onDateSelected = { fechaInicio = it },
+                    onDateCleared = { fechaInicio = null },
+                    modifier = Modifier.testTag(ReportViewTestTags.START_DATE_FIELD)
+                )
+                Space()
+                ModernDatePickerTextField(
+                    label = stringResource(R.string.Label_Filtro_Fecha_Fin_Report),
+                    selectedDate = fechaFin,
+                    onDateSelected = { fechaFin = it },
+                    onDateCleared = { fechaFin = null },
+                    modifier = Modifier.testTag(ReportViewTestTags.END_DATE_FIELD)
+                )
+                Space(12.dp)
+            }
+            // --- PAGINACIÓN ---
+            val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
+            if (totalPages > 1) {
+                item {
+                    Pagination(
+                        totalPages = totalPages,
+                        currentPage = currentPage,
+                        onPageChanged = { newPage -> currentPage = newPage }
                     )
                 }
             }
-        }
+            // --- LISTA DE RESULTADOS ---
+            val startIndex = (currentPage - 1) * itemsPerPage
+            val endIndex = min(startIndex + itemsPerPage, reportes.size)
+            val reportesEnPagina =
+                if (startIndex <= endIndex) reportes.subList(startIndex, endIndex) else emptyList()
 
-        Space()
+            if (reportesEnPagina.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.Mensaje_Reporte_No_Encontrado),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                items(reportesEnPagina, key = { it.hashCode() }) { reporte ->
+                    val clave = obtenerClavePorTipo(reporte.tipo)
+                    val nombreMostrado = obtenerParametro(reporte, clave)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            // ✅ **CAMBIO CLAVE**: El clickable ahora actualiza el estado local.
+                            .clickable {
+                                selectedReporte = reporte
+                                showDialog = true
+                            }
+                    ) {
+                        Text(text = nombreMostrado, modifier = Modifier.padding(16.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            var expandedGuardias by remember { mutableStateOf(false) }
-
-            ButtonApp(
-                text = nombreGuardiaSeleccionado,
-                iconButton = true,
-                onClick = { expandedGuardias = true }
-            )
-
-            DropdownMenu(
-                expanded = expandedGuardias,
-                onDismissRequest = { expandedGuardias = false },
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-            ) {
-                // Opción para limpiar el filtro y ver todos los reportes
-                DropdownMenuItem(
-                    onClick = {
-                        filtroGuardiaId = null
-                        nombreGuardiaSeleccionado = "Todos los guardias"
-                        expandedGuardias = false
-                    },
-                    text = { Text(text = "Todos los guardias") }
-                )
-                // Opciones para cada guardia en el puesto
-                guardiasDelPuesto.forEach { (id, nombre) ->
-                    DropdownMenuItem(
-                        onClick = {
-                            filtroGuardiaId = id
-                            nombreGuardiaSeleccionado = nombre
-                            expandedGuardias = false
-                        },
-                        text = { Text(text = nombre) }
-                    )
+                    }
                 }
             }
         }
-
-        Space()
-
-        when (tipoFiltro) {
-            "Observacion" -> {
-                CustomTextField(
-                    value = nombreFiltro,
-                    label = stringResource(R.string.Label_Filtro_Obs_Report),
-                    onValueChange = { nombreFiltro = it },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                    ),
-                    text_Tag = ReportViewTestTags.OBSERVATION_TITLE_FILTER_FIELD
-                )
-            }
-            "Vehicular" -> {
-                // Filtro para Placa: Acepta letras, números y guiones.
-                CustomTextField(
-                    value = idFiltro,
-                    label = stringResource(R.string.Label_Filtro_Veh_Report),
-                    onValueChange = { newValue ->
-                        // Esta validación asegura que el String `idFiltro` solo contenga
-                        // los caracteres permitidos para una placa.
-                        if (newValue.all { it.isLetterOrDigit() || it == '-' }) {
-                            idFiltro = newValue.lowercase()
+        if (showDialog && selectedReporte != null) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Detalle del Reporte") },
+                text = {
+                    LazyColumn { // Usar LazyColumn dentro del diálogo por si el contenido es largo
+                        item {
+                            MostrarReporte(reporte = selectedReporte!!, tipo = selectedReporte!!.tipo)
                         }
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                    ),
-                    text_Tag = ReportViewTestTags.ID_FILTER_FIELD
-                )
-                Space()
-                // --- Filtro para Nombre (letras y espacios) ---
-                CustomTextField(
-                    value = nombreFiltro,
-                    label = stringResource(R.string.Label_Filtro_User_Name_Report),
-                    onValueChange = { newValue ->
-                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-                            nombreFiltro = newValue
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                    ),
-                    text_Tag = ReportViewTestTags.NAME_FILTER_FIELD,
-                )
-            }
-            "Personal", "Elemento" -> {
-                // Filtro para ID: Acepta solo números.
-                CustomTextField(
-                    value = idFiltro,
-                    label = stringResource(R.string.Label_Filtro_User_ID_Report),
-                    onValueChange = { newValue ->
-                        if (newValue.all { it.isDigit() }) {
-                            idFiltro = newValue
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done,
-                    ),
-                    text_Tag = ReportViewTestTags.ID_FILTER_FIELD
-                )
-                Space()
-                // --- Filtro para Nombre (letras y espacios) ---
-                CustomTextField(
-                    value = nombreFiltro,
-                    label = stringResource(R.string.Label_Filtro_User_Name_Report),
-                    onValueChange = { newValue ->
-                        if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-                            nombreFiltro = newValue
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                    ),
-                    text_Tag = ReportViewTestTags.NAME_FILTER_FIELD,
-                )
-            }
-        }
-
-        Space()
-
-        ModernDatePickerTextField(
-            label = stringResource(R.string.Label_Filtro_Fecha_Inicio_Report),
-            selectedDate = fechaInicio,
-            onDateSelected = { fechaInicio = it },
-            onDateCleared = { fechaInicio = null },
-            modifier = Modifier.testTag(ReportViewTestTags.START_DATE_FIELD)
-        )
-        Space()
-
-        ModernDatePickerTextField(
-            label = stringResource(R.string.Label_Filtro_Fecha_Fin_Report),
-            selectedDate = fechaFin,
-            onDateSelected = { fechaFin = it },
-            onDateCleared = { fechaFin = null },
-            modifier = Modifier.testTag(ReportViewTestTags.END_DATE_FIELD)
-        )
-
-        Space(12.dp)
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            PaginationScreen(reportes)
+                    }
+                },
+                confirmButton = {
+                    ButtonApp(
+                        text = "CERRAR",
+                        onClick = { showDialog = false }
+                    )
+                }
+            )
         }
     }
 }
@@ -549,37 +532,6 @@ fun Pagination(
             ) {
                 Text(stringResource(R.string.Value_Pagination_Siguiente), color = background)
             }
-        }
-    }
-}
-
-@Composable
-fun PaginationScreen(reportes: List<Reporte>) {
-    var currentPage by remember { mutableStateOf(1) }
-    val itemsPerPage = 10
-    val totalPages = (reportes.size + itemsPerPage - 1) / itemsPerPage
-
-    if (currentPage > totalPages && totalPages > 0) {
-        currentPage = totalPages
-    } else if (totalPages == 0) {
-        currentPage = 1
-    }
-
-    // El Column distribuye el espacio verticalmente ---
-    Column {
-        if (totalPages > 0) {
-            Pagination(
-                totalPages = totalPages,
-                currentPage = currentPage,
-                onPageChanged = { newPage -> currentPage = newPage }
-            )
-        }
-
-        Space(10.dp)
-
-        // Se usa un Box con weight para que la lista ocupe el espacio restante ---
-        Box(modifier = Modifier.weight(1f)) {
-            ContentForPage(reportes = reportes, itemsPerPage = itemsPerPage, currentPage = currentPage)
         }
     }
 }

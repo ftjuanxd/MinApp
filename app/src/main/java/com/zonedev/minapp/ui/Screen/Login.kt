@@ -63,6 +63,14 @@ fun BlobUi() {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         // 'maxWidth' y 'maxHeight' ahora están disponibles para usarlos en los modificadores.
 
+        val dynamicFontSize = when {
+            // Para pantallas de baja altura (ej. teléfonos en horizontal)
+            maxHeight < 700.dp -> 30.sp
+            // Para pantallas de altura media (ej. teléfonos en vertical)
+            maxHeight < 1000.dp -> 35.sp
+            // Para pantallas muy altas (ej. tablets)
+            else -> 54.sp
+        }
         // 2. La imagen del blob se alinea en la esquina superior derecha.
         //    Su tamaño y desplazamiento ahora son proporcionales al ancho de la pantalla,
         //    lo que garantiza que se escale correctamente en cualquier dispositivo.
@@ -72,8 +80,8 @@ fun BlobUi() {
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(maxWidth * 3f) // Por ejemplo, el 90% del ancho de la pantalla
-                .offset(x = maxWidth * -0.24f, y = -(maxWidth * 0.86f)) // El desplazamiento también es proporcional
+                .size(maxWidth * 1.5f) // Por ejemplo, el 90% del ancho de la pantalla
+                .offset(x = maxWidth * -0.15f, y = -(maxWidth * 0.5f)) // El desplazamiento también es proporcional
         )
 
         // 3. El texto se alinea arriba a la izquierda y se posiciona con padding.
@@ -82,7 +90,7 @@ fun BlobUi() {
             text = stringResource(R.string.blob_ui_text), // "BIENVENIDO"
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
-            fontSize = 37.sp,
+            fontSize = dynamicFontSize,
             fontFamily = bodyFontFamily,
             textAlign = TextAlign.Start, // Es mejor usar Start que Justify para textos cortos.
             modifier = Modifier
