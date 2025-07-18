@@ -2,7 +2,11 @@ package com.zonedev.minapp.ui.Templates
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -257,104 +261,110 @@ fun Template_Text(
     // Ahora usamos una lista, aunque solo contendrá 0 o 1 elemento
     var evidenciasUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
-    if (Tipo_Report == "Elemento") {
-        ImagePicker(
-            selectedUris = evidenciasUris,
-            onImagesSelected = { uris -> evidenciasUris = uris },
-            allowMultiple = false, // MODO IMAGEN ÚNICA
-            label = stringResource(R.string.Value_Label_Element)
-        )
-    }
-    if(Tipo_Report == "Vehicular"){
-        CustomTextField(
-            value = placa,
-            label = Label_Id,
-            onValueChange = { newString ->
-                val filtered = newString.filter { it.isLetterOrDigit() }.lowercase()
-                if (filtered.length <= 6) {
-                    val letters = filtered.take(3)
-                    val numbers = filtered.drop(3)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        if (Tipo_Report == "Elemento") {
+            ImagePicker(
+                selectedUris = evidenciasUris,
+                onImagesSelected = { uris -> evidenciasUris = uris },
+                allowMultiple = false, // MODO IMAGEN ÚNICA
+                label = stringResource(R.string.Value_Label_Element)
+            )
+        }
+        if(Tipo_Report == "Vehicular"){
+            CustomTextField(
+                value = placa,
+                label = Label_Id,
+                onValueChange = { newString ->
+                    val filtered = newString.filter { it.isLetterOrDigit() }.lowercase()
+                    if (filtered.length <= 6) {
+                        val letters = filtered.take(3)
+                        val numbers = filtered.drop(3)
 
-                    // Solo actualiza el estado si el contenido es válido
-                    if (letters.all { it.isLetter() } && numbers.all { it.isDigit() }) {
-                        placa = filtered // Guarda "ABC123", no "ABC-123"
+                        // Solo actualiza el estado si el contenido es válido
+                        if (letters.all { it.isLetter() } && numbers.all { it.isDigit() }) {
+                            placa = filtered // Guarda "ABC123", no "ABC-123"
+                        }
                     }
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                ),
+                visualTransformation = PlacaVisualTransformation(),
+                text_Tag = TemplateTestTags.ID_FIELD
+            )
+        }else{
+            CustomTextField(
+                value = id?.toString() ?: "",
+                label = Label_Id,
+                onValueChange = { newString ->
+                    val filteredString = newString.filter { it.isDigit() }
+                    id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next,
+                ),
+                text_Tag = TemplateTestTags.ID_FIELD
+            )
+        }
+
+        Space()
+
+        CustomTextField(
+            value = name,
+            label = stringResource(R.string.Label_Nombre_Report),
+            onValueChange = { newValue ->
+                if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                    name = newValue
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next,
             ),
-            visualTransformation = PlacaVisualTransformation(),
-            text_Tag = TemplateTestTags.ID_FIELD
+            text_Tag = TemplateTestTags.NAME_FIELD
         )
-    }else{
-        CustomTextField(
-            value = id?.toString() ?: "",
-            label = Label_Id,
-            onValueChange = { newString ->
-                val filteredString = newString.filter { it.isDigit() }
-                id = if (filteredString.isNotEmpty()) filteredString.toLongOrNull() else null
-            },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            text_Tag = TemplateTestTags.ID_FIELD
-        )
-    }
 
-    Space()
+        Space()
 
-    CustomTextField(
-        value = name,
-        label = stringResource(R.string.Label_Nombre_Report),
-        onValueChange = { newValue ->
-            if (newValue.all { it.isLetter() || it.isWhitespace() }) {
-                name = newValue
-            }
-        },
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Text,
-            imeAction = ImeAction.Next,
-        ),
-        text_Tag = TemplateTestTags.NAME_FIELD
-    )
+        val id_placa = if (Tipo_Report == "Vehicular") {
+            // Re-construimos el formato final ANTES de pasarlo al siguiente componente
+            val letters = placa.take(3)
+            val numbers = placa.drop(3)
+            if (numbers.isNotEmpty()) "$letters-$numbers" else letters
+        } else {
+            id?.toString() ?: ""
+        }
 
-    Space()
+        val onResetAction: (Boolean) -> Unit = { shouldHold ->
+            evidenciasUris = emptyList()
 
-    val id_placa = if (Tipo_Report == "Vehicular") {
-        // Re-construimos el formato final ANTES de pasarlo al siguiente componente
-        val letters = placa.take(3)
-        val numbers = placa.drop(3)
-        if (numbers.isNotEmpty()) "$letters-$numbers" else letters
-    } else {
-        id?.toString() ?: ""
-    }
-
-    val onResetAction: (Boolean) -> Unit = { shouldHold ->
-        evidenciasUris = emptyList()
-
-        if (Tipo_Report == "Elemento") {
-            if (!shouldHold) {
+            if (Tipo_Report == "Elemento") {
+                if (!shouldHold) {
+                    // --- Reseteamos 'id' a null ---
+                    id = null
+                    name = ""
+                }
+            } else {
                 // --- Reseteamos 'id' a null ---
                 id = null
                 name = ""
+                placa = ""
             }
-        } else {
-            // --- Reseteamos 'id' a null ---
-            id = null
-            name = ""
-            placa = ""
         }
+        // Pasamos la primera (y única) URI a Components_Template
+        Components_Template(
+            id = id_placa,
+            name = name,
+            tipo_report = Tipo_Report,
+            evidenciasUri = evidenciasUris.firstOrNull(), // Puede ser nulo
+            guardiaId = guardiaId,
+            onResetFields = onResetAction
+        )
     }
-    // Pasamos la primera (y única) URI a Components_Template
-    Components_Template(
-        id = id_placa,
-        name = name,
-        tipo_report = Tipo_Report,
-        evidenciasUri = evidenciasUris.firstOrNull(), // Puede ser nulo
-        guardiaId = guardiaId,
-        onResetFields = onResetAction
-    )
 }
