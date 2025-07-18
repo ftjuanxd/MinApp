@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Components.Report
+package com.zonedev.minapp.ui.Components.Report
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -51,12 +52,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
+import com.zonedev.minapp.Model.Reporte
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.Components.ButtonApp
-import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.Space
-import com.zonedev.minapp.ui.theme.Model.Reporte
-import com.zonedev.minapp.ui.theme.ViewModel.ReporteViewModel
+import com.zonedev.minapp.ViewModel.ReporteViewModel
+import com.zonedev.minapp.ui.Components.ButtonApp
+import com.zonedev.minapp.ui.Components.CustomTextField
+import com.zonedev.minapp.ui.Components.Space
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.color_component
 import com.zonedev.minapp.ui.theme.primary
@@ -67,6 +68,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.min
+
 @Composable
 fun ContentForPage(reportes: List<Reporte>, itemsPerPage: Int, currentPage: Int) {
     val startIndex = (currentPage - 1) * itemsPerPage
@@ -163,11 +165,16 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
     var selectedOption by remember { mutableStateOf("Personal") }
     val options = listOf("Personal", "Vehicular", "Elemento", "Observacion")
     var reportes by remember { mutableStateOf(emptyList<Reporte>()) }
+    //--- VARIABLES FILTRO ---
     var idFiltro by remember { mutableStateOf("") }
     var nombreFiltro by remember { mutableStateOf("") }
     var tipoFiltro by remember { mutableStateOf(selectedOption) }
     var fechaInicio by remember { mutableStateOf<Timestamp?>(null) }
     var fechaFin by remember { mutableStateOf<Timestamp?>(null) }
+    // Variables para el filtro de guarda/nombre
+    var guardiasDelPuesto by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var filtroGuardiaId by remember { mutableStateOf<String?>(null) }
+    var nombreGuardiaSeleccionado by remember { mutableStateOf("Todos los guardias") }
 
     LaunchedEffect(tipoFiltro) {
         idFiltro = ""
@@ -176,14 +183,19 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
         fechaFin = null
     }
 
-    LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin) {
-        reportes = reporteViewModel.buscarReportes(
-            guardiaId = guardiaId,
+    LaunchedEffect(guardiaId) {
+        guardiasDelPuesto = reporteViewModel.obtenerGuardiasDelPuesto(guardiaId)
+    }
+
+    LaunchedEffect(idFiltro, nombreFiltro, tipoFiltro, fechaInicio, fechaFin, filtroGuardiaId) {
+        reportes = reporteViewModel.buscarReportesPorPuesto(
+            guardiaIdActual = guardiaId,
             id = idFiltro,
             nombre = nombreFiltro,
             tipo = tipoFiltro,
             fechaInicio = fechaInicio,
-            fechaFin = fechaFin
+            fechaFin = fechaFin,
+            filtroGuardiaId = filtroGuardiaId
         )
     }
 
@@ -218,6 +230,49 @@ fun DropdownMenu(guardiaId: String, reporteViewModel: ReporteViewModel = viewMod
                         },
                         text = { Text(text = tipo) },
                         modifier = Modifier.testTag(ReportViewTestTags.dropdownItem(tipo))
+                    )
+                }
+            }
+        }
+
+        Space()
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            var expandedGuardias by remember { mutableStateOf(false) }
+
+            ButtonApp(
+                text = nombreGuardiaSeleccionado,
+                iconButton = true,
+                onClick = { expandedGuardias = true }
+            )
+
+            DropdownMenu(
+                expanded = expandedGuardias,
+                onDismissRequest = { expandedGuardias = false },
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            ) {
+                // Opción para limpiar el filtro y ver todos los reportes
+                DropdownMenuItem(
+                    onClick = {
+                        filtroGuardiaId = null
+                        nombreGuardiaSeleccionado = "Todos los guardias"
+                        expandedGuardias = false
+                    },
+                    text = { Text(text = "Todos los guardias") }
+                )
+                // Opciones para cada guardia en el puesto
+                guardiasDelPuesto.forEach { (id, nombre) ->
+                    DropdownMenuItem(
+                        onClick = {
+                            filtroGuardiaId = id
+                            nombreGuardiaSeleccionado = nombre
+                            expandedGuardias = false
+                        },
+                        text = { Text(text = nombre) }
                     )
                 }
             }
@@ -389,13 +444,25 @@ fun ModernDatePickerTextField(
                 }
             }
         },
-        colors = TextFieldDefaults.textFieldColors(
-            disabledIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            containerColor = background,
+        colors = TextFieldDefaults.colors(
+            // Colores del texto que ya tenías
+            focusedTextColor = text,
             unfocusedTextColor = text,
-            focusedTextColor = text
+            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+
+            // Define el color del contenedor para cada estado
+            focusedContainerColor = background,
+            unfocusedContainerColor = background,
+            disabledContainerColor = background,
+
+            // Mantén los indicadores transparentes como lo tenías
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent, // Es buena práctica definir también el de error
+
+            // Color de la etiqueta (label) que ya tenías
+            disabledLabelColor = Color.Transparent
         )
     )
 

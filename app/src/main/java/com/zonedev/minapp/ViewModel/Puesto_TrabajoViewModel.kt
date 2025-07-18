@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.ViewModel
+package com.zonedev.minapp.ViewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

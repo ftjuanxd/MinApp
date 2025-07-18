@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Screen
+package com.zonedev.minapp.ui.Screen
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.Components.ButtonApp
-import com.zonedev.minapp.ui.theme.Components.CustomTextField
-import com.zonedev.minapp.ui.theme.Components.Modal
-import com.zonedev.minapp.ui.theme.Components.Space
+import com.zonedev.minapp.ui.Components.ButtonApp
+import com.zonedev.minapp.ui.Components.CustomTextField
+import com.zonedev.minapp.ui.Components.Modal
+import com.zonedev.minapp.ui.Components.Space
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.bodyFontFamily
 import com.zonedev.minapp.util.TestTags

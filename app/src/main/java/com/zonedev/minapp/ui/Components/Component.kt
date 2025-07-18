@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Components
+package com.zonedev.minapp.ui.Components
 
 
 import androidx.annotation.ColorRes
@@ -129,7 +129,7 @@ fun ButtonApp(
 }
 
 @Composable
-fun CheckHold(): MutableState<Boolean> {
+fun checkHold(): MutableState<Boolean> {
     // Estado del Checkbox
     val isChecked = remember { mutableStateOf(false) }
 
@@ -238,15 +238,25 @@ fun CustomTextField(
                 )
             }
         },
-        colors = TextFieldDefaults.textFieldColors(
-            disabledIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            disabledLabelColor = Color.Transparent,
-            containerColor = background,
-            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+        colors = TextFieldDefaults.colors(
+            // Colores del texto que ya tenías
+            focusedTextColor = text,
             unfocusedTextColor = text,
-            focusedTextColor = text
+            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+
+            // Define el color del contenedor para cada estado
+            focusedContainerColor = background,
+            unfocusedContainerColor = background,
+            disabledContainerColor = background,
+
+            // Mantén los indicadores transparentes como lo tenías
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent, // Es buena práctica definir también el de error
+
+            // Color de la etiqueta (label) que ya tenías
+            disabledLabelColor = Color.Transparent
         )
     )
 }

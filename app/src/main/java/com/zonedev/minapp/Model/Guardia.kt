@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Model
+package com.zonedev.minapp.Model
 
 data class Guardia(
     val image: String = "",

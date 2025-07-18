@@ -1,10 +1,10 @@
-package com.zonedev.minapp.ui.theme.ViewModel
+package com.zonedev.minapp.ViewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.zonedev.minapp.ui.theme.Model.Guardia
+import com.zonedev.minapp.Model.Guardia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

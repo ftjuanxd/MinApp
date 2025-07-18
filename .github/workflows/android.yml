@@ -69,7 +69,7 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim
           script: |
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g" --continue || true
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.numShards=${{ strategy.job-total }} -Pandroid.testInstrumentationRunnerArguments.shardIndex=${{ env.SHARD_INDEX }} -Dorg.gradle.jvmargs="-Xmx3g" --continue
 
       - name: 5. Debug - List report files
         if: always()
@@ -86,7 +86,7 @@ jobs:
   # JOB 3: Publicar el APK final (solo en la rama main)
   # =================================================================
   publish-apk:
-    needs: build
+    needs: test # solo se crea el apk cuando las pruebas han sido exitosas
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:

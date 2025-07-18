@@ -10,7 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.zonedev.minapp.ui.theme.Screen.ScreenReport
+import com.zonedev.minapp.ui.Screen.ScreenReport
 import com.zonedev.minapp.util.ReportViewTestTags
 import org.junit.Before
 import org.junit.Rule

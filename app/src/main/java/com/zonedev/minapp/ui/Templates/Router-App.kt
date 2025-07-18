@@ -1,4 +1,4 @@
-package com.zonedev.minapp.ui.theme.Templates
+package com.zonedev.minapp.ui.Templates
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
@@ -41,14 +41,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.zonedev.minapp.R
-import com.zonedev.minapp.ui.theme.Components.Space
-import com.zonedev.minapp.ui.theme.Screen.Guardia.Element
-import com.zonedev.minapp.ui.theme.Screen.Guardia.Observations
-import com.zonedev.minapp.ui.theme.Screen.Guardia.Personal
-import com.zonedev.minapp.ui.theme.Screen.Guardia.Vehicular
-import com.zonedev.minapp.ui.theme.Screen.ProfileScreen
-import com.zonedev.minapp.ui.theme.Screen.ScreenReport
-import com.zonedev.minapp.ui.theme.ViewModel.GuardiaViewModel
+import com.zonedev.minapp.ui.Components.Space
+import com.zonedev.minapp.ui.Screen.Guardia.Element
+import com.zonedev.minapp.ui.Screen.Guardia.Observations
+import com.zonedev.minapp.ui.Screen.Guardia.Personal
+import com.zonedev.minapp.ui.Screen.Guardia.Vehicular
+import com.zonedev.minapp.ui.Screen.ProfileScreen
+import com.zonedev.minapp.ui.Screen.ScreenReport
+import com.zonedev.minapp.ViewModel.GuardiaViewModel
 import com.zonedev.minapp.ui.theme.background
 import com.zonedev.minapp.ui.theme.primary
 

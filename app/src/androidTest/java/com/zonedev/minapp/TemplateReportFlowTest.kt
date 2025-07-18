@@ -7,7 +7,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.zonedev.minapp.ui.theme.Templates.Template_Text
+import com.zonedev.minapp.ui.Templates.Template_Text
 import com.zonedev.minapp.util.TemplateTestTags
 import org.junit.Rule
 import org.junit.Test

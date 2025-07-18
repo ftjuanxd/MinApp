@@ -9,7 +9,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.zonedev.minapp.ui.theme.Screen.Guardia.Observations
+import com.zonedev.minapp.ui.Screen.Guardia.Observations
 import com.zonedev.minapp.util.ObservationsTestTags
 import org.junit.Rule
 import org.junit.Test
